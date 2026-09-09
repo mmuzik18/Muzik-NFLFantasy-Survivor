@@ -14,6 +14,7 @@ type PlayerContextValue = {
   loading: boolean;
   error: string | null;
   refreshPlayer: () => Promise<void>;
+  updateDisplayName: (name: string) => Promise<void>;
 };
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -30,6 +31,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const existing = await client.models.Player.list();
     const me = existing.data.find((p) => p.id === user.userId) ?? null;
     setMyPlayer(me);
+  }
+
+  async function updateDisplayName(name: string) {
+    if (!myPlayer) return;
+    await client.models.Player.update({ id: myPlayer.id, displayName: name });
+    await refreshPlayer();
   }
 
   useEffect(() => {
@@ -59,7 +66,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   return (
-    <PlayerContext.Provider value={{ myPlayer, admin, loading, error, refreshPlayer }}>
+    <PlayerContext.Provider value={{ myPlayer, admin, loading, error, refreshPlayer, updateDisplayName }}>
       {children}
     </PlayerContext.Provider>
   );

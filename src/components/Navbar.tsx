@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import { BrandMark } from "./BrandMark";
+import { EditableName } from "./EditableName";
 import { usePlayer } from "@/lib/PlayerContext";
 
 export function Navbar() {
   const { user, signOut } = useAuthenticator((ctx) => [ctx.user]);
-  const { myPlayer, admin } = usePlayer();
+  const { myPlayer, admin, updateDisplayName } = usePlayer();
   const pathname = usePathname();
   const displayName = myPlayer?.displayName ?? user?.username ?? "";
 
@@ -47,7 +48,11 @@ export function Navbar() {
 
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="hidden sm:flex items-center gap-2 text-sm">
-            <span className="text-[#f7f3e8] font-medium">{displayName}</span>
+            {myPlayer ? (
+              <EditableName name={displayName} onSave={updateDisplayName} />
+            ) : (
+              <span className="text-[#f7f3e8] font-medium">{displayName}</span>
+            )}
             {admin && (
               <span className="rounded-full bg-gold/20 text-gold-soft text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5">
                 Admin
