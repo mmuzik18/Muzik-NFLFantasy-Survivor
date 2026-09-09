@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated Amplify backend build output (CDK synth assets) — not
+    // source we own or want linted.
+    ".amplify/**",
   ]),
 ]);
 

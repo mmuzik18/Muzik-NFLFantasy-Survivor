@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f3e8;
+  --foreground: #17140f;
+
+  --color-field: #0b2e1d;
+  --color-field-2: #123825;
+  --color-gold: #c8912f;
+  --color-gold-soft: #e9c98a;
+  --color-cream: #f7f3e8;
+  --color-card: #fffdf8;
+  --color-ink: #17140f;
+  --color-ink-soft: #5b5548;
+  --color-line: #e4dcc5;
+
+  --color-win: #2f7a4d;
+  --color-win-bg: #e6f2ea;
+  --color-loss: #a8382c;
+  --color-loss-bg: #f7e8e6;
+  --color-pending: #9c7a2e;
+  --color-pending-bg: #f3ecd8;
+
+  --shadow-card: 0 1px 2px rgba(23, 20, 15, 0.04), 0 6px 16px -8px rgba(23, 20, 15, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-field: var(--color-field);
+  --color-field-2: var(--color-field-2);
+  --color-gold: var(--color-gold);
+  --color-gold-soft: var(--color-gold-soft);
+  --color-cream: var(--color-cream);
+  --color-card: var(--color-card);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-line: var(--color-line);
+
+  --color-win: var(--color-win);
+  --color-win-bg: var(--color-win-bg);
+  --color-loss: var(--color-loss);
+  --color-loss-bg: var(--color-loss-bg);
+  --color-pending: var(--color-pending);
+  --color-pending-bg: var(--color-pending-bg);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-oswald);
+  --font-score: var(--font-anton);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0c1210;
+    --foreground: #f2ede0;
+
+    --color-field: #0b2e1d;
+    --color-field-2: #16452c;
+    --color-gold: #dba84a;
+    --color-gold-soft: #efcd8b;
+    --color-cream: #0c1210;
+    --color-card: #141b17;
+    --color-ink: #f2ede0;
+    --color-ink-soft: #a7a396;
+    --color-line: #263229;
+
+    --color-win: #4bab73;
+    --color-win-bg: #14261c;
+    --color-loss: #e0685a;
+    --color-loss-bg: #2a1815;
+    --color-pending: #d9b563;
+    --color-pending-bg: #262013;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
   }
+}
+
+* {
+  border-color: var(--color-line);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Amplify Authenticator shell (the sign-in / sign-up screen). Selectors
+   target the library's own data-attributes on [data-amplify-authenticator]
+   (outer, full-bleed) and [data-amplify-router] (the form card) — see
+   node_modules/@aws-amplify/ui-react RouteContainer for the DOM shape. */
+[data-amplify-authenticator] {
+  min-height: 100dvh;
+  padding: 2.5rem 1.25rem;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 64px
+    ),
+    radial-gradient(ellipse at top, #123825 0%, #0b2e1d 70%);
+}
+
+[data-amplify-authenticator] [data-amplify-router] {
+  border-radius: 14px;
+  overflow: hidden;
 }
