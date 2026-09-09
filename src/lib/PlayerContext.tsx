@@ -15,7 +15,7 @@ type PlayerContextValue = {
   error: string | null;
   /** True until the player has set a display name of their own — the
    * account still shows its default (their email). Drives the "choose
-   * your name" prompt on first sign-up (see Navbar). */
+   * your name" prompt on first sign-up (see WelcomeNamePrompt). */
   needsDisplayName: boolean;
   refreshPlayer: () => Promise<void>;
   updateDisplayName: (name: string) => Promise<void>;
@@ -62,7 +62,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           // to an already-deployed pool; confirmed against a real failed
           // deploy). So every new account starts out showing its email,
           // and `needsDisplayName` above drives a one-time prompt in the
-          // nav to replace it with something real.
+          // welcome banner to replace it with something real — it's shown
+          // on every screen size, unlike the nav's name display, which is
+          // hidden on mobile.
           //
           // isEliminated is intentionally omitted — the schema defaults it
           // to false, and the field is admin-write-only from here on.
