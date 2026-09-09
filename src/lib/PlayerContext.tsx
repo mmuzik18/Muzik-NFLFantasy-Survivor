@@ -5,6 +5,7 @@ import { useAuthenticator } from "@aws-amplify/ui-react";
 import type { Schema } from "../../amplify/data/resource";
 import { client } from "./client";
 import { isAdmin } from "./authGroups";
+import { consumePendingDisplayName } from "./pendingDisplayName";
 
 type Player = Schema["Player"]["type"];
 
@@ -55,22 +56,20 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         const existing = await client.models.Player.list();
         let me = existing.data.find((p) => p.id === user.userId);
         if (!me) {
-          // Cognito's sign-up form can't collect a custom display name here
-          // (the user pool client would need write permission for an
-          // attribute like "nickname", which — like the pool's schema
-          // itself — can only be granted at pool creation time, not added
-          // to an already-deployed pool; confirmed against a real failed
-          // deploy). So every new account starts out showing its email,
-          // and `needsDisplayName` above drives a one-time prompt in the
-          // welcome banner to replace it with something real — it's shown
-          // on every screen size, unlike the nav's name display, which is
-          // hidden on mobile.
+          // A name typed into the sign-up form's display-name field (see
+          // providers.tsx) lives in localStorage, not Cognito — Cognito
+          // attributes can't be added to an already-deployed pool
+          // (confirmed against a real failed deploy). Falls back to the
+          // account email if they left it blank; `needsDisplayName` below
+          // then drives a one-time prompt in the welcome banner to catch
+          // that case too.
           //
           // isEliminated is intentionally omitted — the schema defaults it
           // to false, and the field is admin-write-only from here on.
+          const pendingName = consumePendingDisplayName().trim();
           const created = await client.models.Player.create({
             id: user.userId,
-            displayName: user.signInDetails?.loginId ?? user.username,
+            displayName: pendingName || user.signInDetails?.loginId || user.username,
           });
           me = created.data ?? undefined;
         }
