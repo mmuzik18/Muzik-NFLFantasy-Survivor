@@ -5,7 +5,7 @@ import Link from "next/link";
 import { client } from "@/lib/client";
 import { usePlayer } from "@/lib/PlayerContext";
 import type { Schema } from "../../../../amplify/data/resource";
-import { AdminGradePanel } from "@/components/AdminGradePanel";
+import { AdminPicksPanel } from "@/components/AdminPicksPanel";
 import { AdminPlayersPanel } from "@/components/AdminPlayersPanel";
 
 type Player = Schema["Player"]["type"];
@@ -45,6 +45,11 @@ export default function AdminPage() {
     // A loss just records as a loss — it doesn't eliminate the player.
     // Standings tracks win/loss record instead of alive/out.
     await client.models.Pick.update({ id: pick.id, result });
+    await refresh();
+  }
+
+  async function deletePick(pick: Pick) {
+    await client.models.Pick.delete({ id: pick.id });
     await refresh();
   }
 
@@ -90,10 +95,7 @@ export default function AdminPage() {
         <p className="text-sm text-ink-soft">Loading...</p>
       ) : (
         <>
-          <AdminGradePanel
-            pendingPicks={picks.filter((p) => p.result === "PENDING")}
-            onGrade={gradePick}
-          />
+          <AdminPicksPanel picks={picks} players={players} onGrade={gradePick} onDelete={deletePick} />
           <AdminPlayersPanel players={players} onUpdate={updatePlayer} />
         </>
       )}

@@ -123,6 +123,7 @@ export function PickBoard({
   mode,
   usedTeams,
   highlightTeam = null,
+  confirmedTeam = null,
   onConfirm,
   confirming = false,
   loading = false,
@@ -133,18 +134,31 @@ export function PickBoard({
   mode: Mode;
   usedTeams: Set<string>;
   highlightTeam?: string | null;
+  /** The team already saved for this week, if any — while `mode` is
+   * "picking" this pre-selects it and lets the player pick a different
+   * team instead, right up until the week locks. */
+  confirmedTeam?: string | null;
   onConfirm?: (team: string) => void;
   confirming?: boolean;
   loading?: boolean;
   statusMessage?: string | null;
 }) {
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(confirmedTeam);
   const sorted = [...games].sort((a, b) => a.startTime.localeCompare(b.startTime));
 
+  // A team already assigned to this week isn't "used" from this board's
+  // point of view — you're allowed to keep or re-pick it.
+  const selectableUsedTeams =
+    confirmedTeam !== null
+      ? new Set([...usedTeams].filter((t) => t !== confirmedTeam))
+      : usedTeams;
+
   function pickTeam(team: string) {
-    if (mode !== "picking" || usedTeams.has(team)) return;
+    if (mode !== "picking" || selectableUsedTeams.has(team)) return;
     setSelected((cur) => (cur === team ? null : team));
   }
+
+  const hasChange = selected !== null && selected !== confirmedTeam;
 
   return (
     <section className="rounded-xl border border-line bg-card shadow-[var(--shadow-card)] p-5">
@@ -159,15 +173,22 @@ export function PickBoard({
             </span>
             <button
               type="button"
-              disabled={!selected || confirming}
+              disabled={!hasChange || confirming}
               onClick={() => selected && onConfirm?.(selected)}
               className="bg-gold text-ink font-semibold rounded-md px-4 py-1.5 text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gold-soft transition-colors cursor-pointer"
             >
-              {confirming ? "Confirming..." : "Confirm pick"}
+              {confirming ? "Saving..." : confirmedTeam ? "Update pick" : "Confirm pick"}
             </button>
           </div>
         )}
       </div>
+
+      {mode === "picking" && confirmedTeam && (
+        <p className="text-xs text-ink-soft mb-4">
+          Currently picked: <span className="font-medium text-ink">{confirmedTeam}</span> — you can
+          change this any time before the first game of the week starts.
+        </p>
+      )}
 
       {mode === "locked" && (
         <p className="text-sm text-pending mb-4">
@@ -187,7 +208,7 @@ export function PickBoard({
               key={g.espnEventId}
               game={g}
               mode={mode}
-              usedTeams={usedTeams}
+              usedTeams={selectableUsedTeams}
               selectedTeam={mode === "picking" ? selected : null}
               highlightTeam={mode !== "picking" ? highlightTeam : null}
               onPickTeam={pickTeam}

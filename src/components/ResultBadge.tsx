@@ -1,4 +1,7 @@
-type Result = "PENDING" | "WIN" | "LOSS" | null | undefined;
+// Pick.result is a plain string in the schema, not an enum (see
+// amplify/data/resource.ts for why), so this widens to any string rather
+// than the old literal union.
+type Result = string | null | undefined;
 
 const STYLES: Record<string, string> = {
   WIN: "bg-win-bg text-win",

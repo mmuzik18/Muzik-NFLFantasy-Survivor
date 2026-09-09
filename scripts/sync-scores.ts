@@ -126,7 +126,6 @@ async function autoAssignMissedPicks(
       playerId: player.id,
       week,
       team: randomTeam,
-      result: "PENDING",
     });
     assigned += 1;
   }
@@ -157,10 +156,11 @@ async function gradePendingPicks(
   const finalGames = games.filter((g) => g.status === "FINAL");
   if (finalGames.length === 0) return;
 
-  const picksRes = await client.models.Pick.list({
-    filter: { week: { eq: week }, result: { eq: "PENDING" } },
-  });
-  const pending = picksRes.data;
+  // Ungraded picks have result === null (see amplify/data/resource.ts for
+  // why it's not stored as a literal "PENDING" string) — DynamoDB filters
+  // don't reliably match null via `eq`, so filter client-side instead.
+  const picksRes = await client.models.Pick.list({ filter: { week: { eq: week } } });
+  const pending = picksRes.data.filter((p) => !p.result);
   if (pending.length === 0) return;
 
   // A loss just records as a loss — it doesn't eliminate the player.

@@ -83,10 +83,12 @@ export default function Home() {
 
   let boardMode: "picking" | "watching" | "locked";
   let statusMessage: string | null = null;
-  if (viewPick) {
-    boardMode = "watching";
-  } else if (viewWeek === pickWeek && prevWeekAllFinal && !viewWeekStarted) {
+  if (viewWeek === pickWeek && prevWeekAllFinal && !viewWeekStarted) {
+    // The window's genuinely open — stay editable even if a pick already
+    // exists for it, so the player can change their mind up to kickoff.
     boardMode = "picking";
+  } else if (viewPick) {
+    boardMode = "watching";
   } else if (viewWeek === pickWeek && !prevWeekAllFinal) {
     boardMode = "locked";
     statusMessage = `Week ${pickWeek} opens once week ${prevWeek}'s games finish.`;
@@ -141,18 +143,22 @@ export default function Home() {
     if (!myPlayer) return;
     setConfirming(true);
     try {
-      const res = await client.models.Pick.create({
-        playerId: myPlayer.id,
-        week: pickWeek,
-        team,
-        result: "PENDING",
-      });
+      // A pick for pickWeek may already exist (the player changing their
+      // mind before the week locks) — update it in place rather than
+      // creating a second record for the same week. `result` is
+      // intentionally omitted from both calls: the owner doesn't have
+      // create/update permission on that field (server-enforced — see
+      // amplify/data/resource.ts), it's admin/system-graded only, and the
+      // schema defaults a new pick's result to PENDING automatically.
+      const existing = myPicks.find((p) => p.week === pickWeek);
+      const res = existing
+        ? await client.models.Pick.update({ id: existing.id, team })
+        : await client.models.Pick.create({ playerId: myPlayer.id, week: pickWeek, team });
       if (res.errors) {
         setError(JSON.stringify(res.errors));
-        console.error("Pick.create errors", res.errors);
+        console.error("Pick save errors", res.errors);
       }
       await refresh();
-      setSelectedWeek(pickWeek + 1);
     } finally {
       setConfirming(false);
     }
@@ -205,6 +211,7 @@ export default function Home() {
                 mode={boardMode}
                 usedTeams={usedTeams}
                 highlightTeam={viewPick?.team ?? null}
+                confirmedTeam={viewPick?.team ?? null}
                 onConfirm={confirmPick}
                 confirming={confirming}
                 loading={viewWeekLive.loading}

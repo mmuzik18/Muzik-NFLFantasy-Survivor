@@ -135,9 +135,7 @@ const components = {
   Footer() {
     return (
       <div className="pb-10 pt-4 text-center text-xs text-[#a7a08e]">
-        <a href="/rules" className="text-[#e9c98a] hover:underline">
-          How the pool works
-        </a>
+        Sign in to see the rules, make your pick, and check standings.
       </div>
     );
   },

@@ -18,30 +18,39 @@ with an AWS Amplify Gen 2 backend (Cognito auth + AppSync/DynamoDB data).
 - If you miss the deadline entirely, `npm run sync-scores` auto-assigns a
   random team you haven't used yet, so you're never just stuck — see
   "Syncing NFL scores" below.
-- Once submitted, a pick can't be edited by the player — only an admin can
-  correct one. This is enforced server-side (see Authorization below), not
-  just hidden in the UI. The kickoff-based lock in the picking UI itself is
-  a convenience on top of that, not the security boundary.
+- A player can change which team they've picked for the current week as
+  many times as they want — the "confirm" step just saves the current
+  choice, it doesn't lock it in. `result` and `week` can never be touched
+  by the player, though (see Authorization below), so this can't be used
+  to self-grade a pick or move it to a different week; only an admin can
+  fix either of those.
 - Game scores and results sync from ESPN's public scoreboard via
   `npm run sync-scores`, which also auto-grades any pending picks whose game
   just went final.
-- `/admin` (visible only to the `admins` Cognito group, linked from the nav
-  when you're in it) lets an admin manually grade a pick, or manually mark a
-  player eliminated for some other reason (e.g. they dropped out) — the
-  `isEliminated` field still exists for that, it's just no longer set
+- `/admin` (visible only to the `admins` Cognito group, appears as a tab
+  once you're in it) lets an admin grade or delete any pick, and manually
+  mark a player eliminated for some other reason (e.g. they dropped out) —
+  the `isEliminated` field still exists for that, it's just no longer set
   automatically by a loss.
-- `/rules` is a public page (no sign-in required) explaining the rules —
-  linked from the sign-in screen and the footer.
+- `/rules` and `/admin` are tabs inside the signed-in app, alongside the
+  pool itself — there's no public, signed-out version of either.
 
 ### Authorization
 
 - `Player`: anyone can read; you can create/update your own row (e.g.
   display name), but `isEliminated`/`eliminatedWeek` are read-only for you —
   only the `admins` group can write them.
-- `Pick`: anyone can read; you can create your own picks (tied to your
-  identity server-side, so you can't submit a pick as someone else), but you
-  cannot update or delete one after submitting. Only `admins` can grade or
-  correct a pick.
+- `Pick`: anyone can read. You can create your own picks (tied to your
+  identity server-side via `ownerDefinedIn`, so you can't submit one as
+  someone else) and update `team` on your own pick — that's what lets you
+  change your mind before a week locks. `playerId` and `week` are
+  create-only even for the owner (a pick can't be reassigned to another
+  player or moved to a different week), and `result` is read-only for the
+  owner (grading is admin/system-only). No delete for the owner — only an
+  admin can remove a pick outright. This was verified against the actual
+  deployed resolvers (`aws appsync get-function` on the auth steps), not
+  just the schema source, since field-level auth on a model's own owner
+  field is an unusual enough configuration to want to check.
 - `Game`: anyone can read; only `admins` can write (via the sync script).
 
 ### Local development
