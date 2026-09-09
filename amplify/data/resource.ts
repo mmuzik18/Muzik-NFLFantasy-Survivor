@@ -9,7 +9,13 @@ const schema = a.schema({
       // it must repeat every grant this field still needs, including
       // authenticated read (standings shows everyone's status, not just
       // your own).
-      isEliminated: a.boolean().default(false).authorization((allow) => [
+      // No .default() — a default value gets injected into the mutation
+      // input before field-auth runs, and owner/authenticated only have
+      // 'read' here, so a non-admin's own Player.create would fail with
+      // "Unauthorized on [isEliminated]" (same bug already worked around
+      // on Pick.result below). A missing value reads as falsy everywhere
+      // this field is used (page.tsx, StandingsPanel, AdminPlayersPanel).
+      isEliminated: a.boolean().authorization((allow) => [
         allow.owner().to(['read']),
         allow.group('admins'),
         allow.authenticated().to(['read']),

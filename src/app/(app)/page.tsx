@@ -28,7 +28,10 @@ export default function Home() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Starts false, not true: if myPlayer never loads (e.g. Player.create
+  // fails for this account), the effect below never runs and this would
+  // otherwise be stuck at its initial value forever — see isLoading.
+  const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
