@@ -126,6 +126,7 @@ export function PickBoard({
   onConfirm,
   confirming = false,
   loading = false,
+  statusMessage,
 }: {
   week: number;
   games: NormalizedGame[];
@@ -135,6 +136,7 @@ export function PickBoard({
   onConfirm?: (team: string) => void;
   confirming?: boolean;
   loading?: boolean;
+  statusMessage?: string | null;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const sorted = [...games].sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -169,7 +171,8 @@ export function PickBoard({
 
       {mode === "locked" && (
         <p className="text-sm text-pending mb-4">
-          The first game of week {week} already kicked off and no pick was made in time.
+          {statusMessage ??
+            `The first game of week ${week} already kicked off and no pick was made in time.`}
         </p>
       )}
 

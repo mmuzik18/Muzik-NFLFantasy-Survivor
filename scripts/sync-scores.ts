@@ -2,8 +2,9 @@
  * Pulls NFL scores from ESPN and syncs them into the app's Game model, then:
  *   1. auto-assigns a random available team to any active player who missed
  *      the pick deadline (the week's first kickoff) entirely, and
- *   2. auto-grades any pending Picks whose game just went final, marking the
- *      picker eliminated on a loss.
+ *   2. auto-grades any pending Picks whose game just went final. A loss
+ *      just records as a loss — it doesn't eliminate the player, who keeps
+ *      picking every week regardless of record.
  *
  * Requires an admin account (a Cognito user in the `admins` group — see
  * README) since Game writes and Pick/Player grading are locked to that
@@ -162,6 +163,8 @@ async function gradePendingPicks(
   const pending = picksRes.data;
   if (pending.length === 0) return;
 
+  // A loss just records as a loss — it doesn't eliminate the player.
+  // Standings tracks win/loss record instead of alive/out.
   let graded = 0;
   for (const pick of pending) {
     const game = finalGames.find(
@@ -172,18 +175,6 @@ async function gradePendingPicks(
     const result = pick.team === game.winner ? "WIN" : "LOSS";
     await client.models.Pick.update({ id: pick.id, result });
     graded += 1;
-
-    if (result === "LOSS") {
-      const playerRes = await client.models.Player.get({ id: pick.playerId });
-      const player = playerRes.data;
-      if (player && !player.isEliminated) {
-        await client.models.Player.update({
-          id: player.id,
-          isEliminated: true,
-          eliminatedWeek: pick.week,
-        });
-      }
-    }
   }
   console.log(`Graded ${graded} pending pick(s).`);
 }

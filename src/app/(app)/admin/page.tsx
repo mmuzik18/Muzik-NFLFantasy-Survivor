@@ -42,17 +42,9 @@ export default function AdminPage() {
   }, [admin]);
 
   async function gradePick(pick: Pick, result: "WIN" | "LOSS") {
+    // A loss just records as a loss — it doesn't eliminate the player.
+    // Standings tracks win/loss record instead of alive/out.
     await client.models.Pick.update({ id: pick.id, result });
-    if (result === "LOSS") {
-      const picker = players.find((p) => p.id === pick.playerId);
-      if (picker && !picker.isEliminated) {
-        await client.models.Player.update({
-          id: picker.id,
-          isEliminated: true,
-          eliminatedWeek: pick.week,
-        });
-      }
-    }
     await refresh();
   }
 

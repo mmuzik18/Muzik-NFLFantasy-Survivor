@@ -1,41 +1,51 @@
 import type { Schema } from "../../amplify/data/resource";
 
 type Player = Schema["Player"]["type"];
+type Record = { wins: number; losses: number };
 
-export function StandingsPanel({ players }: { players: Player[] }) {
+export function StandingsPanel({
+  players,
+  records,
+}: {
+  players: Player[];
+  records: Map<string, Record>;
+}) {
+  const recordFor = (id: string): Record => records.get(id) ?? { wins: 0, losses: 0 };
+
   const sorted = [...players].sort((a, b) => {
     if (a.isEliminated !== b.isEliminated) return a.isEliminated ? 1 : -1;
+    const ra = recordFor(a.id);
+    const rb = recordFor(b.id);
+    if (rb.wins !== ra.wins) return rb.wins - ra.wins;
+    if (ra.losses !== rb.losses) return ra.losses - rb.losses;
     return a.displayName.localeCompare(b.displayName);
   });
-  const aliveCount = players.filter((p) => !p.isEliminated).length;
 
   return (
     <section className="rounded-xl border border-line bg-card shadow-[var(--shadow-card)] p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-display uppercase tracking-wide text-ink text-lg">Standings</h2>
-        <span className="text-xs text-ink-soft">
-          {aliveCount} of {players.length} alive
-        </span>
-      </div>
+      <h2 className="font-display uppercase tracking-wide text-ink text-lg mb-4">Standings</h2>
 
       {sorted.length === 0 ? (
         <p className="text-sm text-ink-soft">No players yet.</p>
       ) : (
         <ul className="divide-y divide-line">
-          {sorted.map((p) => (
-            <li key={p.id} className="py-2.5 flex items-center justify-between">
-              <span className="text-sm text-ink flex items-center gap-2">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${p.isEliminated ? "bg-loss" : "bg-win"}`}
-                  aria-hidden="true"
-                />
-                {p.displayName}
-              </span>
-              <span className={`text-xs font-medium ${p.isEliminated ? "text-loss" : "text-win"}`}>
-                {p.isEliminated ? `Out — Week ${p.eliminatedWeek}` : "Alive"}
-              </span>
-            </li>
-          ))}
+          {sorted.map((p) => {
+            const r = recordFor(p.id);
+            return (
+              <li key={p.id} className="py-2.5 flex items-center justify-between">
+                <span className="text-sm text-ink">{p.displayName}</span>
+                {p.isEliminated ? (
+                  <span className="text-xs font-medium text-loss">
+                    Out — Week {p.eliminatedWeek}
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium text-ink-soft tabular-nums">
+                    <span className="text-win">{r.wins}</span>-<span className="text-loss">{r.losses}</span>
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

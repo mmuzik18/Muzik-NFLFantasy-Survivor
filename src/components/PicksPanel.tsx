@@ -4,10 +4,10 @@ import { ResultBadge } from "./ResultBadge";
 export function PicksPanel({ picks }: { picks: PickWithGame[] }) {
   return (
     <section className="rounded-xl border border-line bg-card shadow-[var(--shadow-card)] p-5">
-      <h2 className="font-display uppercase tracking-wide text-ink text-lg mb-4">My picks</h2>
+      <h2 className="font-display uppercase tracking-wide text-ink text-lg mb-4">Pick history</h2>
 
       {picks.length === 0 ? (
-        <p className="text-sm text-ink-soft">No picks yet.</p>
+        <p className="text-sm text-ink-soft">No decided picks yet.</p>
       ) : (
         <ul className="divide-y divide-line">
           {picks.map(({ pick, game, opponent, pickScore, opponentScore }) => (

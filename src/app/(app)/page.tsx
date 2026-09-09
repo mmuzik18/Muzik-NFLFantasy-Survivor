@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Schema } from "../../../amplify/data/resource";
 import { client } from "@/lib/client";
 import { attachGames } from "@/lib/gameDisplay";
@@ -9,6 +9,8 @@ import { useLiveScores, firstKickoff } from "@/lib/useLiveScores";
 import { useNow } from "@/lib/useNow";
 import { currentNflSeason } from "@/lib/nflWeek";
 import { PickBoard } from "@/components/PickBoard";
+import { WeekTabs } from "@/components/WeekTabs";
+import { ResultBadge } from "@/components/ResultBadge";
 import { PicksPanel } from "@/components/PicksPanel";
 import { StandingsPanel } from "@/components/StandingsPanel";
 
@@ -29,43 +31,76 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+  const initializedWeek = useRef(false);
 
   const myPicks = useMemo(
     () => picks.filter((p) => p.playerId === myPlayer?.id).sort((a, b) => a.week - b.week),
     [picks, myPlayer],
   );
-  const myPicksWithGames = useMemo(() => attachGames(myPicks, games), [myPicks, games]);
+  const decidedPicks = useMemo(
+    () => myPicks.filter((p) => p.result === "WIN" || p.result === "LOSS"),
+    [myPicks],
+  );
+  const decidedPicksWithGames = useMemo(() => attachGames(decidedPicks, games), [decidedPicks, games]);
   const usedTeams = useMemo(() => new Set(myPicks.map((p) => p.team)), [myPicks]);
+  const pickedWeeks = useMemo(() => new Set(myPicks.map((p) => p.week)), [myPicks]);
+
+  // Season win/loss record per player, for Standings — computed from every
+  // player's decided picks, not just this player's.
+  const records = useMemo(() => {
+    const map = new Map<string, { wins: number; losses: number }>();
+    for (const p of picks) {
+      if (p.result !== "WIN" && p.result !== "LOSS") continue;
+      const r = map.get(p.playerId) ?? { wins: 0, losses: 0 };
+      if (p.result === "WIN") r.wins += 1;
+      else r.losses += 1;
+      map.set(p.playerId, r);
+    }
+    return map;
+  }, [picks]);
 
   const season = currentNflSeason();
-  // `pickWeek` is the next week this player is due to pick (1 if they
-  // haven't picked at all yet). `prevWeek` is the week immediately before
-  // it — the one that has to fully finish before pickWeek's board opens.
   const pickWeek = nextWeekFor(myPicks, myPlayer?.id);
   const prevWeek = pickWeek - 1;
-  const lastPick = myPicks.find((p) => p.week === prevWeek);
+  const viewWeek = selectedWeek ?? pickWeek;
 
-  const pickWeekLive = useLiveScores(pickWeek, season);
-  // Always called (hooks can't be conditional) — for week 1 this just
-  // redundantly fetches week 1 again and the result goes unused below.
+  const viewWeekLive = useLiveScores(viewWeek, season);
+  // Always called (hooks can't be conditional) — needed to know whether
+  // pickWeek itself is open yet, independent of which week is being viewed.
   const prevWeekLive = useLiveScores(prevWeek >= 1 ? prevWeek : 1, season);
 
   const now = useNow();
-  const pickWeekKickoff = firstKickoff(pickWeekLive.games);
-  const pickWeekStarted = now !== null && pickWeekKickoff !== null && now >= pickWeekKickoff.getTime();
+  const viewWeekKickoff = firstKickoff(viewWeekLive.games);
+  const viewWeekStarted = now !== null && viewWeekKickoff !== null && now >= viewWeekKickoff.getTime();
 
-  // If ESPN genuinely has no games for prevWeek (not just "still loading"),
-  // don't get stuck waiting forever — treat it as finished.
   const prevWeekAllFinal =
     prevWeek < 1 ||
     (!prevWeekLive.loading &&
       (prevWeekLive.games.length === 0 || prevWeekLive.games.every((g) => g.status === "FINAL")));
 
-  const boardMode = !prevWeekAllFinal ? "watching" : pickWeekStarted ? "locked" : "picking";
-  const boardWeek = boardMode === "watching" ? prevWeek : pickWeek;
-  const boardGames = boardMode === "watching" ? prevWeekLive.games : pickWeekLive.games;
-  const boardLoading = boardMode === "watching" ? prevWeekLive.loading : pickWeekLive.loading;
-  const topPick = boardMode === "watching" ? lastPick : undefined;
+  const viewPick = myPicks.find((p) => p.week === viewWeek);
+
+  let boardMode: "picking" | "watching" | "locked";
+  let statusMessage: string | null = null;
+  if (viewPick) {
+    boardMode = "watching";
+  } else if (viewWeek === pickWeek && prevWeekAllFinal && !viewWeekStarted) {
+    boardMode = "picking";
+  } else if (viewWeek === pickWeek && !prevWeekAllFinal) {
+    boardMode = "locked";
+    statusMessage = `Week ${pickWeek} opens once week ${prevWeek}'s games finish.`;
+  } else if (viewWeek === pickWeek) {
+    boardMode = "locked";
+    statusMessage = `The first game of week ${pickWeek} already kicked off and no pick was made in time.`;
+  } else if (viewWeek > pickWeek) {
+    boardMode = "locked";
+    statusMessage = `Week ${viewWeek} isn't open yet — you're currently on week ${pickWeek}.`;
+  } else {
+    // viewWeek < pickWeek with no pick found shouldn't happen (picks are
+    // sequential), but fall back to locked/no-message rather than crash.
+    boardMode = "locked";
+  }
 
   async function refresh() {
     const [playersRes, picksRes, gamesRes] = await Promise.all([
@@ -92,6 +127,16 @@ export default function Home() {
     })();
   }, [myPlayer]);
 
+  useEffect(() => {
+    if (!initializedWeek.current && myPlayer && !loading) {
+      setSelectedWeek(pickWeek);
+      initializedWeek.current = true;
+    }
+    // Only runs once, right after the first load — pickWeek/myPlayer are
+    // read at that moment, not tracked reactively after that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myPlayer, loading]);
+
   async function confirmPick(team: string) {
     if (!myPlayer) return;
     setConfirming(true);
@@ -107,6 +152,7 @@ export default function Home() {
         console.error("Pick.create errors", res.errors);
       }
       await refresh();
+      setSelectedWeek(pickWeek + 1);
     } finally {
       setConfirming(false);
     }
@@ -131,46 +177,45 @@ export default function Home() {
                 You&apos;re out
               </h2>
               <p className="text-sm text-loss">
-                You were eliminated in week {myPlayer.eliminatedWeek}. Thanks for playing — check the
-                standings to see who&apos;s still alive.
+                An admin marked you eliminated in week {myPlayer.eliminatedWeek}. If that&apos;s a
+                mistake, ask them to reinstate you.
               </p>
             </section>
           ) : (
             <>
+              <WeekTabs current={viewWeek} pickedWeeks={pickedWeeks} onSelect={setSelectedWeek} />
+
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <h1 className="font-display text-2xl uppercase tracking-wide text-ink">
-                  Week {boardWeek}
+                  Week {viewWeek}
                 </h1>
-                {topPick && (
+                {viewPick && (
                   <div className="flex items-center gap-2 bg-card border border-gold rounded-lg px-3 py-1.5">
                     <span className="text-[10px] text-ink-soft uppercase tracking-wide">Your pick</span>
-                    <span className="font-semibold text-ink text-sm">{topPick.team}</span>
+                    <span className="font-semibold text-ink text-sm">{viewPick.team}</span>
+                    <ResultBadge result={viewPick.result} />
                   </div>
-                )}
-                {!prevWeekAllFinal && (
-                  <span className="text-xs text-ink-soft">
-                    Week {pickWeek} opens once week {prevWeek}&apos;s games finish.
-                  </span>
                 )}
               </div>
 
               <PickBoard
-                key={`${boardWeek}-${boardMode}`}
-                week={boardWeek}
-                games={boardGames}
+                key={`${viewWeek}-${boardMode}`}
+                week={viewWeek}
+                games={viewWeekLive.games}
                 mode={boardMode}
                 usedTeams={usedTeams}
-                highlightTeam={topPick?.team ?? null}
+                highlightTeam={viewPick?.team ?? null}
                 onConfirm={confirmPick}
                 confirming={confirming}
-                loading={boardLoading}
+                loading={viewWeekLive.loading}
+                statusMessage={statusMessage}
               />
             </>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PicksPanel picks={myPicksWithGames} />
-            <StandingsPanel players={players} />
+            <PicksPanel picks={decidedPicksWithGames} />
+            <StandingsPanel players={players} records={records} />
           </div>
         </>
       )}

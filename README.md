@@ -1,7 +1,8 @@
 ## NFL Survivor Pool
 
-A weekly pick 'em survivor pool tracker. Next.js (App Router) frontend with an
-AWS Amplify Gen 2 backend (Cognito auth + AppSync/DynamoDB data).
+A weekly NFL pick 'em tracker — every pick counts toward a season win-loss
+record; a wrong pick doesn't eliminate you. Next.js (App Router) frontend
+with an AWS Amplify Gen 2 backend (Cognito auth + AppSync/DynamoDB data).
 
 ### How it works
 
@@ -9,23 +10,26 @@ AWS Amplify Gen 2 backend (Cognito auth + AppSync/DynamoDB data).
 - Each week you can pick any team playing that week, right up until that
   week's first game kicks off — pick, change your mind, pick again, as much
   as you want before then. The next week doesn't open up until every game
-  from the current week has finished.
-- If your pick loses (or ties), you're eliminated for the rest of the
-  season. If you miss the deadline entirely, `npm run sync-scores`
-  auto-assigns a random team you haven't used yet, so you're never just
-  stuck — see "Syncing NFL scores" below.
+  from the current week has finished. Tabs across the top let you browse any
+  week's games/results, past or upcoming.
+- A win or loss just records to your season record — it never eliminates
+  you, you keep picking every week regardless. Standings are sorted by
+  record (wins, then fewest losses).
+- If you miss the deadline entirely, `npm run sync-scores` auto-assigns a
+  random team you haven't used yet, so you're never just stuck — see
+  "Syncing NFL scores" below.
 - Once submitted, a pick can't be edited by the player — only an admin can
   correct one. This is enforced server-side (see Authorization below), not
   just hidden in the UI. The kickoff-based lock in the picking UI itself is
   a convenience on top of that, not the security boundary.
-- Standings show who's still alive.
 - Game scores and results sync from ESPN's public scoreboard via
   `npm run sync-scores`, which also auto-grades any pending picks whose game
   just went final.
 - `/admin` (visible only to the `admins` Cognito group, linked from the nav
-  when you're in it) lets an admin manually grade a pick or override a
-  player's elimination status, for the rare case the auto-sync needs a
-  correction.
+  when you're in it) lets an admin manually grade a pick, or manually mark a
+  player eliminated for some other reason (e.g. they dropped out) — the
+  `isEliminated` field still exists for that, it's just no longer set
+  automatically by a loss.
 - `/rules` is a public page (no sign-in required) explaining the rules —
   linked from the sign-in screen and the footer.
 
@@ -53,8 +57,8 @@ npm run dev            # in a second terminal
 `scripts/sync-scores.ts` pulls the current week's scores from ESPN's public
 scoreboard, upserts them into the `Game` model, auto-assigns a random
 still-available team to any active player who missed the pick deadline, and
-auto-grades any pending picks whose game just finished (marking the picker
-eliminated on a loss).
+auto-grades any pending picks whose game just finished (a loss just records
+as a loss — see "How it works" above).
 
 1. Copy `.env.local.example` to `.env.local` and fill in the email/password
    of an account you've added to the `admins` group.
