@@ -40,19 +40,6 @@ npx ampx sandbox      # deploys a personal backend sandbox, writes amplify_outpu
 npm run dev            # in a second terminal
 ```
 
-### Becoming an admin (commissioner)
-
-Grading picks and syncing scores requires a Cognito user in the `admins`
-group. After signing up your own account once, add yourself via the AWS CLI
-(or the Cognito console → your user pool → Users → your user → Add to group):
-
-```bash
-aws cognito-idp admin-add-user-to-group \
-  --user-pool-id <from amplify_outputs.json: auth.user_pool_id> \
-  --username <your email> \
-  --group-name admins
-```
-
 ### Syncing NFL scores
 
 `scripts/sync-scores.ts` pulls the current week's scores from ESPN's public
