@@ -141,6 +141,14 @@ const components = {
   },
 };
 
+// No Cognito-attribute-based sign-up field for a display name (e.g. via
+// signUpAttributes={['nickname']}): that requires the user pool client to
+// have write permission for that attribute, which — like the schema
+// attribute itself — is a create-time-only setting on an already-deployed
+// pool (confirmed against a real failed deploy). The display name is
+// captured entirely on the app side after sign-up instead — see
+// PlayerContext.tsx (needsDisplayName) and Navbar's EditableName.
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider theme={theme}>

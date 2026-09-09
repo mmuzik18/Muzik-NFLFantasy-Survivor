@@ -9,7 +9,7 @@ import { usePlayer } from "@/lib/PlayerContext";
 
 export function Navbar() {
   const { user, signOut } = useAuthenticator((ctx) => [ctx.user]);
-  const { myPlayer, admin, updateDisplayName } = usePlayer();
+  const { myPlayer, admin, needsDisplayName, updateDisplayName } = usePlayer();
   const pathname = usePathname();
   const displayName = myPlayer?.displayName ?? user?.username ?? "";
 
@@ -49,7 +49,7 @@ export function Navbar() {
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="hidden sm:flex items-center gap-2 text-sm">
             {myPlayer ? (
-              <EditableName name={displayName} onSave={updateDisplayName} />
+              <EditableName name={displayName} autoEdit={needsDisplayName} onSave={updateDisplayName} />
             ) : (
               <span className="text-[#f7f3e8] font-medium">{displayName}</span>
             )}

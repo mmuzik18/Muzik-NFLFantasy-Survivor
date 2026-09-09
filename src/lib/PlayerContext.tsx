@@ -13,6 +13,10 @@ type PlayerContextValue = {
   admin: boolean;
   loading: boolean;
   error: string | null;
+  /** True until the player has set a display name of their own — the
+   * account still shows its default (their email). Drives the "choose
+   * your name" prompt on first sign-up (see Navbar). */
+  needsDisplayName: boolean;
   refreshPlayer: () => Promise<void>;
   updateDisplayName: (name: string) => Promise<void>;
 };
@@ -25,6 +29,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [admin, setAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const defaultDisplayName = user?.signInDetails?.loginId || user?.username || "";
+  const needsDisplayName = myPlayer !== null && myPlayer.displayName === defaultDisplayName;
 
   async function refreshPlayer() {
     if (!user) return;
@@ -48,6 +55,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         const existing = await client.models.Player.list();
         let me = existing.data.find((p) => p.id === user.userId);
         if (!me) {
+          // Cognito's sign-up form can't collect a custom display name here
+          // (the user pool client would need write permission for an
+          // attribute like "nickname", which — like the pool's schema
+          // itself — can only be granted at pool creation time, not added
+          // to an already-deployed pool; confirmed against a real failed
+          // deploy). So every new account starts out showing its email,
+          // and `needsDisplayName` above drives a one-time prompt in the
+          // nav to replace it with something real.
+          //
           // isEliminated is intentionally omitted — the schema defaults it
           // to false, and the field is admin-write-only from here on.
           const created = await client.models.Player.create({
@@ -66,7 +82,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   return (
-    <PlayerContext.Provider value={{ myPlayer, admin, loading, error, refreshPlayer, updateDisplayName }}>
+    <PlayerContext.Provider
+      value={{ myPlayer, admin, loading, error, needsDisplayName, refreshPlayer, updateDisplayName }}
+    >
       {children}
     </PlayerContext.Provider>
   );
