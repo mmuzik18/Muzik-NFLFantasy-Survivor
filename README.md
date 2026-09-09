@@ -69,9 +69,30 @@ still-available team to any active player who missed the pick deadline, and
 auto-grades any pending picks whose game just finished (a loss just records
 as a loss — see "How it works" above).
 
-1. Copy `.env.local.example` to `.env.local` and fill in the email/password
-   of an account you've added to the `admins` group.
-2. Run it any time — safe to re-run, games are upserted by ESPN's event id:
+It always targets the deployed **production** app (the Amplify Hosting
+branch deployment), never your local sandbox — `ampx sandbox` and a branch
+deployment are separate Amplify environments with their own Cognito pool
+and data, so running it against sandbox outputs would update data nobody
+actually sees.
+
+1. Generate `amplify_outputs.production.json` (gitignored, one-time unless
+   the backend's resource ids change) — this is a different file from the
+   plain `amplify_outputs.json` that `npx ampx sandbox` / `npm run dev`
+   use:
+
+   ```bash
+   npx ampx generate outputs --app-id d3kdwfj51a98to --branch main
+   mv amplify_outputs.json amplify_outputs.production.json
+   npx ampx sandbox --once   # regenerates the sandbox amplify_outputs.json
+   ```
+
+2. Copy `.env.local.example` to `.env.local` and fill in the email/password
+   of an account you've added to the `admins` group **in the production
+   Cognito pool** — check which pool an account is in before assuming; a
+   user created in the sandbox pool won't exist in production or vice
+   versa. `auth.user_pool_id` in `amplify_outputs.production.json` names
+   the right one.
+3. Run it any time — safe to re-run, games are upserted by ESPN's event id:
 
    ```bash
    npm run sync-scores                    # current week, current season

@@ -15,12 +15,19 @@
  * With no --week, it syncs the current NFL week automatically. Safe to
  * re-run any time (e.g. from cron every 15 minutes on game day) — games
  * are upserted by their ESPN event id, and only PENDING picks are graded.
+ *
+ * Deliberately targets amplify_outputs.production.json, not the plain
+ * amplify_outputs.json `npm run dev` uses — `ampx sandbox` and a branch
+ * deployment are fully separate Amplify environments with their own
+ * Cognito pool and data, and this script's whole purpose is to update the
+ * real app people are actually playing, never a sandbox nobody sees. See
+ * README for how to generate that file.
  */
 import { Amplify } from "aws-amplify";
 import { signIn, getCurrentUser } from "aws-amplify/auth";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../amplify/data/resource";
-import outputs from "../amplify_outputs.json";
+import outputs from "../amplify_outputs.production.json";
 import { fetchWeekScores, type NormalizedGame } from "../src/lib/espn";
 import { currentNflSeason, currentNflWeekGuess } from "../src/lib/nflWeek";
 
