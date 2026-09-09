@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import { BrandMark } from "./BrandMark";
-import { isAdmin } from "@/lib/authGroups";
+import { usePlayer } from "@/lib/PlayerContext";
 
-export function Navbar({ displayName }: { displayName: string }) {
-  const { signOut } = useAuthenticator((ctx) => [ctx.user]);
-  const [admin, setAdmin] = useState(false);
+const TABS = [
+  { href: "/", label: "Pool" },
+  { href: "/scoreboard", label: "Scoreboard" },
+] as const;
 
-  useEffect(() => {
-    isAdmin().then(setAdmin);
-  }, []);
+export function Navbar() {
+  const { user, signOut } = useAuthenticator((ctx) => [ctx.user]);
+  const { myPlayer, admin } = usePlayer();
+  const pathname = usePathname();
+  const displayName = myPlayer?.displayName ?? user?.username ?? "";
 
   return (
     <header className="sticky top-0 z-10 border-b border-[#0b2e1d] bg-field">
@@ -24,14 +27,31 @@ export function Navbar({ displayName }: { displayName: string }) {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-4 sm:gap-6">
+        <nav className="flex items-center gap-1 rounded-lg bg-black/20 p-1">
+          {TABS.map((tab) => {
+            const active = pathname === tab.href;
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  active ? "bg-gold text-ink" : "text-[#c9c3b2] hover:text-[#f7f3e8]"
+                }`}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="flex items-center gap-4 sm:gap-6">
           <Link
             href="/rules"
             className="hidden sm:inline text-sm text-[#c9c3b2] hover:text-gold-soft transition-colors"
           >
             Rules
           </Link>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="hidden sm:flex items-center gap-2 text-sm">
             <span className="text-[#f7f3e8] font-medium">{displayName}</span>
             {admin && (
               <span className="rounded-full bg-gold/20 text-gold-soft text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5">
@@ -45,7 +65,7 @@ export function Navbar({ displayName }: { displayName: string }) {
           >
             Sign out
           </button>
-        </nav>
+        </div>
       </div>
     </header>
   );
