@@ -6,17 +6,25 @@ AWS Amplify Gen 2 backend (Cognito auth + AppSync/DynamoDB data).
 ### How it works
 
 - Sign up / sign in with email.
-- Each week, pick one NFL team to win. You can't reuse a team.
-- If your pick loses (or ties), you're eliminated for the rest of the season.
+- Each week you can pick any team playing that week, right up until that
+  week's first game kicks off — pick, change your mind, pick again, as much
+  as you want before then. The next week doesn't open up until every game
+  from the current week has finished.
+- If your pick loses (or ties), you're eliminated for the rest of the
+  season. If you miss the deadline entirely, `npm run sync-scores`
+  auto-assigns a random team you haven't used yet, so you're never just
+  stuck — see "Syncing NFL scores" below.
 - Once submitted, a pick can't be edited by the player — only an admin can
   correct one. This is enforced server-side (see Authorization below), not
-  just hidden in the UI.
+  just hidden in the UI. The kickoff-based lock in the picking UI itself is
+  a convenience on top of that, not the security boundary.
 - Standings show who's still alive.
 - Game scores and results sync from ESPN's public scoreboard via
   `npm run sync-scores`, which also auto-grades any pending picks whose game
-  just went final. See "Syncing NFL scores" below.
-- A "Commissioner" panel (visible only to the `admins` Cognito group) lets an
-  admin manually grade a pick, for the rare case the auto-sync needs a
+  just went final.
+- `/admin` (visible only to the `admins` Cognito group, linked from the nav
+  when you're in it) lets an admin manually grade a pick or override a
+  player's elimination status, for the rare case the auto-sync needs a
   correction.
 - `/rules` is a public page (no sign-in required) explaining the rules —
   linked from the sign-in screen and the footer.
@@ -43,8 +51,10 @@ npm run dev            # in a second terminal
 ### Syncing NFL scores
 
 `scripts/sync-scores.ts` pulls the current week's scores from ESPN's public
-scoreboard, upserts them into the `Game` model, and auto-grades any pending
-picks whose game just finished (marking the picker eliminated on a loss).
+scoreboard, upserts them into the `Game` model, auto-assigns a random
+still-available team to any active player who missed the pick deadline, and
+auto-grades any pending picks whose game just finished (marking the picker
+eliminated on a loss).
 
 1. Copy `.env.local.example` to `.env.local` and fill in the email/password
    of an account you've added to the `admins` group.

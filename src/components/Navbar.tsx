@@ -6,16 +6,13 @@ import { useAuthenticator } from "@aws-amplify/ui-react";
 import { BrandMark } from "./BrandMark";
 import { usePlayer } from "@/lib/PlayerContext";
 
-const TABS = [
-  { href: "/", label: "Pool" },
-  { href: "/scoreboard", label: "Scoreboard" },
-] as const;
-
 export function Navbar() {
   const { user, signOut } = useAuthenticator((ctx) => [ctx.user]);
   const { myPlayer, admin } = usePlayer();
   const pathname = usePathname();
   const displayName = myPlayer?.displayName ?? user?.username ?? "";
+
+  const tabs = admin ? ([{ href: "/", label: "Pool" }, { href: "/admin", label: "Admin" }] as const) : [];
 
   return (
     <header className="sticky top-0 z-10 border-b border-[#0b2e1d] bg-field">
@@ -27,22 +24,24 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1 rounded-lg bg-black/20 p-1">
-          {TABS.map((tab) => {
-            const active = pathname === tab.href;
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  active ? "bg-gold text-ink" : "text-[#c9c3b2] hover:text-[#f7f3e8]"
-                }`}
-              >
-                {tab.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {tabs.length > 0 && (
+          <nav className="flex items-center gap-1 rounded-lg bg-black/20 p-1">
+            {tabs.map((tab) => {
+              const active = pathname === tab.href;
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    active ? "bg-gold text-ink" : "text-[#c9c3b2] hover:text-[#f7f3e8]"
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
 
         <div className="flex items-center gap-4 sm:gap-6">
           <Link

@@ -1,7 +1,9 @@
 /**
- * Pulls NFL scores from ESPN and syncs them into the app's Game model, then
- * auto-grades any pending Picks whose game just went final (marking the
- * picker eliminated on a loss, same rule the in-app commissioner tools use).
+ * Pulls NFL scores from ESPN and syncs them into the app's Game model, then:
+ *   1. auto-assigns a random available team to any active player who missed
+ *      the pick deadline (the week's first kickoff) entirely, and
+ *   2. auto-grades any pending Picks whose game just went final, marking the
+ *      picker eliminated on a loss.
  *
  * Requires an admin account (a Cognito user in the `admins` group — see
  * README) since Game writes and Pick/Player grading are locked to that
@@ -75,7 +77,59 @@ async function main() {
   }
   console.log(`Synced ${games.length} games (${finalizedCount} final).`);
 
+  await autoAssignMissedPicks(client, week, games);
   await gradePendingPicks(client, week, games);
+}
+
+/**
+ * Once a week's first game has kicked off, any active player who hasn't
+ * made a pick for it yet gets a random still-available team auto-assigned
+ * — so missing the deadline doesn't silently strand a player with no pick
+ * at all, it just costs them the choice. Only touches players for whom
+ * this is genuinely their next week to pick (mirrors nextWeekFor in the
+ * app), so it never assigns a week out of order.
+ */
+async function autoAssignMissedPicks(
+  client: ReturnType<typeof generateClient<Schema>>,
+  week: number,
+  games: NormalizedGame[],
+) {
+  const kickoff =
+    games.length > 0 ? Math.min(...games.map((g) => new Date(g.startTime).getTime())) : null;
+  if (kickoff === null || Date.now() < kickoff) return; // deadline hasn't passed yet
+
+  const weekTeams = Array.from(new Set(games.flatMap((g) => [g.homeTeam, g.awayTeam])));
+
+  const [playersRes, picksRes] = await Promise.all([
+    client.models.Player.list(),
+    client.models.Pick.list(),
+  ]);
+  const allPicks = picksRes.data;
+
+  let assigned = 0;
+  for (const player of playersRes.data) {
+    if (player.isEliminated) continue;
+
+    const playerPicks = allPicks.filter((p) => p.playerId === player.id);
+    if (playerPicks.some((p) => p.week === week)) continue; // already picked this week
+
+    const maxPickedWeek = playerPicks.length > 0 ? Math.max(...playerPicks.map((p) => p.week)) : 0;
+    if (maxPickedWeek + 1 !== week) continue; // not actually due to pick this week yet
+
+    const usedTeams = new Set(playerPicks.map((p) => p.team));
+    const available = weekTeams.filter((t) => !usedTeams.has(t));
+    if (available.length === 0) continue; // no eligible team left to assign
+
+    const randomTeam = available[Math.floor(Math.random() * available.length)];
+    await client.models.Pick.create({
+      playerId: player.id,
+      week,
+      team: randomTeam,
+      result: "PENDING",
+    });
+    assigned += 1;
+  }
+  if (assigned > 0) console.log(`Auto-assigned ${assigned} missed pick(s) for week ${week}.`);
 }
 
 function toGameFields(game: NormalizedGame) {
