@@ -11,7 +11,10 @@ export function PicksPanel({ picks }: { picks: PickWithGame[] }) {
       ) : (
         <ul className="divide-y divide-line">
           {picks.map(({ pick, game, opponent, pickScore, opponentScore }) => (
-            <li key={pick.id} className="py-2.5 flex items-center justify-between gap-3">
+            <li
+              key={pick.id}
+              className="py-2.5 px-2 -mx-2 rounded-md flex items-center justify-between gap-3 transition-colors hover:bg-background"
+            >
               <div>
                 <p className="text-sm font-medium text-ink">
                   Week {pick.week} — {pick.team}

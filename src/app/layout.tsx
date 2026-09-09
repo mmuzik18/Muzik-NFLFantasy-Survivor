@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Oswald, Anton } from "next/font/google";
 import "./globals.css";
+import { themeInitScript } from "@/lib/theme";
+import { ToastProvider } from "@/components/ToastProvider";
+import { UtmCapture } from "@/components/UtmCapture";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,7 +49,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${oswald.variable} ${anton.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        {/* Sets data-theme before first paint so a saved dark/light choice
+            never flashes the wrong theme on load. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body className="min-h-full flex flex-col">
+        <UtmCapture />
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   );
 }

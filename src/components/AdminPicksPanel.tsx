@@ -32,7 +32,10 @@ export function AdminPicksPanel({
       ) : (
         <ul className="divide-y divide-line">
           {sorted.map((p) => (
-            <li key={p.id} className="py-2.5 flex items-center justify-between gap-2 flex-wrap">
+            <li
+              key={p.id}
+              className="py-2.5 px-2 -mx-2 rounded-md flex items-center justify-between gap-2 flex-wrap transition-colors hover:bg-background"
+            >
               <span className="text-sm text-ink">
                 Week {p.week} — <span className="text-ink-soft">{nameFor(p.playerId)}</span> — {p.team}
               </span>

@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { usePlayer } from "@/lib/PlayerContext";
+import { useToast } from "./ToastProvider";
 
 export function WelcomeNamePrompt() {
   const { needsDisplayName, updateDisplayName } = usePlayer();
+  const toast = useToast();
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!needsDisplayName || dismissed) return null;
 
@@ -16,15 +19,20 @@ export function WelcomeNamePrompt() {
     const trimmed = value.trim();
     if (!trimmed) return;
     setSaving(true);
+    setError(null);
     try {
       await updateDisplayName(trimmed);
+      toast.success(`Welcome, ${trimmed}!`);
+    } catch (e) {
+      setError("Couldn't save that name — try again.");
+      console.error(e);
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="bg-gold/10 border-b border-gold/40">
+    <div className="no-print bg-gold/10 border-b border-gold/40">
       <form
         onSubmit={save}
         className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-2.5"
@@ -38,7 +46,10 @@ export function WelcomeNamePrompt() {
           onChange={(e) => setValue(e.target.value)}
           placeholder="Display name"
           maxLength={40}
-          className="flex-1 min-w-[140px] text-sm rounded-md border border-line bg-card px-2 py-1.5 text-ink focus:outline-none focus:border-gold"
+          aria-invalid={error ? true : undefined}
+          className={`flex-1 min-w-[140px] text-sm rounded-md border bg-card px-2 py-1.5 text-ink focus:outline-none ${
+            error ? "border-loss focus:border-loss" : "border-line focus:border-gold"
+          }`}
         />
         <button
           type="submit"
@@ -54,6 +65,7 @@ export function WelcomeNamePrompt() {
         >
           Skip for now
         </button>
+        {error && <p className="w-full text-xs text-loss">{error}</p>}
       </form>
     </div>
   );

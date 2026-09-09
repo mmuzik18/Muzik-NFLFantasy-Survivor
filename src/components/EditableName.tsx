@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "./ToastProvider";
 
 export function EditableName({
   name,
@@ -9,6 +10,7 @@ export function EditableName({
   name: string;
   onSave: (name: string) => Promise<void>;
 }) {
+  const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name);
   const [saving, setSaving] = useState(false);
@@ -20,6 +22,10 @@ export function EditableName({
     setSaving(true);
     try {
       await onSave(trimmed);
+      toast.success(`Display name updated to "${trimmed}".`);
+    } catch (e) {
+      toast.error("Couldn't update your display name — try again.");
+      console.error(e);
     } finally {
       setSaving(false);
     }

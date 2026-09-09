@@ -1,8 +1,18 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { CopyButton } from "./CopyButton";
 
 export function Footer() {
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    (() => setOrigin(window.location.origin))();
+  }, []);
+
   return (
-    <footer className="mt-auto border-t border-[#0b2e1d] bg-field">
+    <footer className="no-print mt-auto border-t border-[#0b2e1d] bg-field">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#8f8a7b]">
         <p>&copy; {new Date().getFullYear()} Muzik NFL Survivor. Just for fun among friends.</p>
         <nav className="flex items-center gap-4">
@@ -17,6 +27,7 @@ export function Footer() {
           >
             NFL scores (ESPN)
           </a>
+          {origin && <CopyButton text={origin} label="Copy invite link" />}
         </nav>
       </div>
     </footer>

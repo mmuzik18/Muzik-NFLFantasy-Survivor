@@ -32,7 +32,10 @@ export function StandingsPanel({
           {sorted.map((p) => {
             const r = recordFor(p.id);
             return (
-              <li key={p.id} className="py-2.5 flex items-center justify-between">
+              <li
+                key={p.id}
+                className="py-2.5 px-2 -mx-2 rounded-md flex items-center justify-between transition-colors hover:bg-background"
+              >
                 <span className="text-sm text-ink">{p.displayName}</span>
                 {p.isEliminated ? (
                   <span className="text-xs font-medium text-loss">
