@@ -20,8 +20,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const myPicks = useMemo(
-    () => picks.filter((p) => p.owner?.startsWith(user?.userId ?? "\0")),
-    [picks, user],
+    () => picks.filter((p) => p.playerId === myPlayer?.id),
+    [picks, myPlayer],
   );
   const usedTeams = useMemo(() => new Set(myPicks.map((p) => p.team)), [myPicks]);
   const availableTeams = NFL_TEAMS.filter((t) => !usedTeams.has(t));
@@ -41,9 +41,10 @@ export default function Home() {
       setLoading(true);
       try {
         const existing = await client.models.Player.list();
-        let me = existing.data.find((p) => p.owner?.startsWith(user.userId));
+        let me = existing.data.find((p) => p.id === user.userId);
         if (!me) {
           const created = await client.models.Player.create({
+            id: user.userId,
             displayName: user.signInDetails?.loginId ?? user.username,
             isEliminated: false,
           });
@@ -68,8 +69,17 @@ export default function Home() {
 
   async function submitPick(e: React.FormEvent) {
     e.preventDefault();
-    if (!team) return;
-    await client.models.Pick.create({ week, team, result: "PENDING" });
+    if (!team || !myPlayer) return;
+    const res = await client.models.Pick.create({
+      playerId: myPlayer.id,
+      week,
+      team,
+      result: "PENDING",
+    });
+    if (res.errors) {
+      setError(JSON.stringify(res.errors));
+      console.error("Pick.create errors", res.errors);
+    }
     setTeam("");
     await refresh();
   }
@@ -77,10 +87,10 @@ export default function Home() {
   async function gradePick(pick: Pick, result: "WIN" | "LOSS") {
     await client.models.Pick.update({ id: pick.id, result });
     if (result === "LOSS") {
-      const owner = players.find((p) => p.owner === pick.owner);
-      if (owner && !owner.isEliminated) {
+      const picker = players.find((p) => p.id === pick.playerId);
+      if (picker && !picker.isEliminated) {
         await client.models.Player.update({
-          id: owner.id,
+          id: picker.id,
           isEliminated: true,
           eliminatedWeek: pick.week,
         });

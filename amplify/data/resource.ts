@@ -14,6 +14,7 @@ const schema = a.schema({
 
   Pick: a
     .model({
+      playerId: a.string().required(),
       week: a.integer().required(),
       team: a.string().required(),
       result: a.enum(['PENDING', 'WIN', 'LOSS']),
