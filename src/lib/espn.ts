@@ -62,9 +62,23 @@ export type NormalizedGame = {
   homeScore: number | null;
   status: GameStatus;
   statusDetail: string;
+  /** Quarter number while in progress (1-4, 5+ for overtime periods); null
+   * before kickoff or once final — ESPN reports 0 for "not started yet". */
+  period: number | null;
+  /** ESPN's own "time remaining in the period" display string (e.g.
+   * "8:45"), null whenever `period` is null. */
+  displayClock: string | null;
   winner: string | null;
   startTime: string;
 };
+
+/** "Q3", "OT", "2OT" ... from ESPN's period number. Regulation is 4
+ * quarters; anything past that is overtime, numbered from period 5. */
+export function formatQuarter(period: number): string {
+  if (period <= 4) return `Q${period}`;
+  const ot = period - 4;
+  return ot === 1 ? "OT" : `${ot}OT`;
+}
 
 function toStatus(state: string, completed: boolean): GameStatus {
   if (completed) return "FINAL";
@@ -87,7 +101,11 @@ type EspnEvent = {
   date: string;
   week?: { number: number };
   competitions: Array<{
-    status: { type: { state: string; completed: boolean; shortDetail?: string } };
+    status: {
+      type: { state: string; completed: boolean; shortDetail?: string };
+      period?: number;
+      displayClock?: string;
+    };
     competitors: EspnCompetitor[];
   }>;
 };
@@ -145,6 +163,8 @@ export async function fetchWeekScores(
       homeScore,
       status,
       statusDetail: competition.status.type.shortDetail ?? "",
+      period: status === "IN_PROGRESS" && competition.status.period ? competition.status.period : null,
+      displayClock: status === "IN_PROGRESS" ? (competition.status.displayClock ?? null) : null,
       winner,
       startTime: event.date,
     };

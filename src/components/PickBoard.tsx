@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { NormalizedGame } from "@/lib/espn";
+import { formatQuarter, type NormalizedGame } from "@/lib/espn";
 
 type Mode = "picking" | "watching" | "locked";
 
@@ -89,8 +89,24 @@ function GameCard({
       }`}
     >
       <div className="flex items-center justify-between mb-2">
-        <span className={`text-[10px] font-semibold uppercase tracking-wide ${isLive ? "text-loss" : "text-ink-soft"}`}>
-          {isLive ? (game.statusDetail || "Live") : isFinal ? "Final" : formatKickoff(game.startTime)}
+        <span
+          className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide ${
+            isLive ? "text-loss" : "text-ink-soft"
+          }`}
+        >
+          {isLive && (
+            <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-loss opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-loss" />
+            </span>
+          )}
+          {isLive
+            ? game.period
+              ? `${formatQuarter(game.period)}${game.displayClock ? ` · ${game.displayClock}` : ""}`
+              : game.statusDetail || "Live"
+            : isFinal
+              ? "Final"
+              : formatKickoff(game.startTime)}
         </span>
       </div>
       <TeamRow
