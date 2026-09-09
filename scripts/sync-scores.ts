@@ -22,14 +22,35 @@
  * Cognito pool and data, and this script's whole purpose is to update the
  * real app people are actually playing, never a sandbox nobody sees. See
  * README for how to generate that file.
+ *
+ * Loaded at runtime via fs, not a static `import ... from
+ * "../amplify_outputs.production.json"`: that file is gitignored (it
+ * holds real resource ids) and so doesn't exist on a fresh checkout —
+ * Amplify Hosting's build server included — and a static import that
+ * TypeScript can't resolve fails `next build`'s typecheck for the whole
+ * app, not just this script. Confirmed by a real failed production
+ * deploy caused by exactly that.
  */
-import { Amplify } from "aws-amplify";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { Amplify, type ResourcesConfig } from "aws-amplify";
 import { signIn, getCurrentUser } from "aws-amplify/auth";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../amplify/data/resource";
-import outputs from "../amplify_outputs.production.json";
 import { fetchWeekScores, type NormalizedGame } from "../src/lib/espn";
 import { currentNflSeason, currentNflWeekGuess } from "../src/lib/nflWeek";
+
+function loadProductionOutputs(): ResourcesConfig {
+  const path = fileURLToPath(new URL("../amplify_outputs.production.json", import.meta.url));
+  try {
+    return JSON.parse(readFileSync(path, "utf-8"));
+  } catch {
+    throw new Error(
+      "amplify_outputs.production.json not found. Generate it first — see the " +
+        "'Syncing NFL scores' section of the README.",
+    );
+  }
+}
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -55,7 +76,7 @@ async function main() {
     );
   }
 
-  Amplify.configure(outputs);
+  Amplify.configure(loadProductionOutputs());
   await signIn({ username: email, password });
   const user = await getCurrentUser();
   console.log(`Signed in as ${user.username}. Syncing week ${week}, season ${season}...`);
