@@ -1,9 +1,10 @@
 name: Sync NFL scores
 
 # Runs scripts/sync-scores.ts on a schedule so picks get graded automatically
-# — no admin has to click Win/Loss by hand or run the script locally. See the
-# "Syncing NFL scores" section of the README for the one-time secrets setup
-# this workflow needs.
+# — no admin has to click Win/Loss by hand or run the script locally. Needs
+# three repo secrets to work: SYNC_ADMIN_EMAIL, SYNC_ADMIN_PASSWORD (an
+# admin Cognito account in production), and AMPLIFY_OUTPUTS_PRODUCTION (the
+# full contents of amplify_outputs.production.json).
 on:
   schedule:
     # Every 15 minutes, Thursday through Tuesday (UTC day-of-week: 4=Thu,
@@ -27,7 +28,12 @@ jobs:
           node-version: 20
           cache: npm
 
-      - run: npm ci
+      # Not `npm ci`: the lock file can't satisfy its strict validation
+      # because of a nested version conflict inside @aws-amplify's own
+      # dependency tree (@opentelemetry/core pulled in at incompatible
+      # versions) — amplify.yml's production build hits the same thing and
+      # uses `npm install` for exactly that reason.
+      - run: npm install
 
       - name: Write amplify_outputs.production.json
         run: echo "$AMPLIFY_OUTPUTS_PRODUCTION" > amplify_outputs.production.json
