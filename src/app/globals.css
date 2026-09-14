@@ -51,8 +51,12 @@
   --font-score: var(--font-anton);
 }
 
+/* Dark palette lives in one place and applies three ways: the OS-level
+   media query (default "system" behavior, only when no manual choice has
+   been made), and the explicit [data-theme] override ThemeToggle sets —
+   in both directions so a manual choice always wins over the OS setting. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #0c1210;
     --foreground: #f2ede0;
 
@@ -75,6 +79,30 @@
 
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #0c1210;
+  --foreground: #f2ede0;
+
+  --color-field: #0b2e1d;
+  --color-field-2: #16452c;
+  --color-gold: #dba84a;
+  --color-gold-soft: #efcd8b;
+  --color-cream: #0c1210;
+  --color-card: #141b17;
+  --color-ink: #f2ede0;
+  --color-ink-soft: #a7a396;
+  --color-line: #263229;
+
+  --color-win: #4bab73;
+  --color-win-bg: #14261c;
+  --color-loss: #e0685a;
+  --color-loss-bg: #2a1815;
+  --color-pending: #d9b563;
+  --color-pending-bg: #262013;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -108,4 +136,75 @@ body {
 [data-amplify-authenticator] [data-amplify-router] {
   border-radius: 14px;
   overflow: hidden;
+}
+
+/* Skip-to-content link: off-screen until keyboard-focused, then docks at
+   the top-left so keyboard/screen-reader users can jump past the nav. */
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: 0.75rem;
+  z-index: 100;
+  background: var(--color-gold);
+  color: var(--color-ink);
+  padding: 0.5rem 1rem;
+  border-radius: 0 0 8px 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-toast-in {
+  animation: toast-in 0.2s ease-out;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.animate-skeleton {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-in,
+  .animate-skeleton {
+    animation: none;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  main {
+    padding: 0 !important;
+  }
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555;
+  }
 }

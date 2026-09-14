@@ -15,7 +15,7 @@ function PlayerRow({
   const [week, setWeek] = useState(player.eliminatedWeek ?? 1);
 
   return (
-    <li className="py-2.5 flex items-center justify-between gap-3">
+    <li className="py-2.5 px-2 -mx-2 rounded-md flex items-center justify-between gap-3 transition-colors hover:bg-background">
       <span className="text-sm text-ink">{player.displayName}</span>
       <div className="flex items-center gap-2">
         {player.isEliminated ? (

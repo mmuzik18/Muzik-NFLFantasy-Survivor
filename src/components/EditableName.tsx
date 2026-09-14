@@ -1,31 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useToast } from "./ToastProvider";
 
 export function EditableName({
   name,
-  autoEdit = false,
   onSave,
 }: {
   name: string;
-  /** Opens the input automatically, once, the first time this becomes
-   * true — used to prompt a brand-new player to pick a display name
-   * instead of leaving their email showing. */
-  autoEdit?: boolean;
   onSave: (name: string) => Promise<void>;
 }) {
+  const toast = useToast();
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(name);
   const [saving, setSaving] = useState(false);
-  const autoTriggered = useRef(false);
-
-  useEffect(() => {
-    if (autoEdit && !autoTriggered.current) {
-      autoTriggered.current = true;
-      setValue("");
-      setEditing(true);
-    }
-  }, [autoEdit]);
 
   async function save() {
     const trimmed = value.trim();
@@ -34,6 +22,10 @@ export function EditableName({
     setSaving(true);
     try {
       await onSave(trimmed);
+      toast.success(`Display name updated to "${trimmed}".`);
+    } catch (e) {
+      toast.error("Couldn't update your display name — try again.");
+      console.error(e);
     } finally {
       setSaving(false);
     }
@@ -71,9 +63,8 @@ export function EditableName({
         onKeyDown={(e) => {
           if (e.key === "Escape") setEditing(false);
         }}
-        placeholder="Pick a display name"
         maxLength={40}
-        className="text-sm bg-[#0b2e1d] border border-gold rounded px-1.5 py-0.5 text-[#f7f3e8] w-36 placeholder:text-[#8f8a7b] focus:outline-none"
+        className="text-sm bg-[#0b2e1d] border border-gold rounded px-1.5 py-0.5 text-[#f7f3e8] w-32 focus:outline-none"
       />
     </form>
   );

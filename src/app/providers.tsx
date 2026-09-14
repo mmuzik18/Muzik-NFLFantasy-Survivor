@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { Amplify } from "aws-amplify";
 import { Authenticator, ThemeProvider } from "@aws-amplify/ui-react";
 import type { Theme } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import outputs from "../../amplify_outputs.json";
+import { loadPendingDisplayName, savePendingDisplayName } from "@/lib/pendingDisplayName";
 
 Amplify.configure(outputs);
 
@@ -116,6 +118,47 @@ function BrandMark() {
   );
 }
 
+// Sits above the actual (Cognito-managed) email field on the Create
+// Account tab. Deliberately NOT a real Cognito attribute (e.g. via
+// signUpAttributes={['nickname']}) — that requires the user pool client
+// to have write permission for that attribute, which, like the pool's
+// schema itself, is a create-time-only setting on an already-deployed
+// pool (confirmed against a real failed deploy). Captured into
+// localStorage instead and consumed once the account is created — see
+// pendingDisplayName.ts and PlayerContext.tsx.
+function SignUpNameField() {
+  const [value, setValue] = useState(() => loadPendingDisplayName());
+
+  return (
+    <div className="px-6 pt-6 pb-1">
+      <label
+        htmlFor="pending-display-name"
+        className="text-sm font-medium block mb-1"
+        style={{ color: "#17140f" }}
+      >
+        Display name
+      </label>
+      <input
+        id="pending-display-name"
+        name="pending-display-name"
+        type="text"
+        autoComplete="off"
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+          savePendingDisplayName(e.target.value);
+        }}
+        placeholder="What should we call you?"
+        maxLength={40}
+        className="w-full rounded-md border border-[#ddd4bc] bg-white px-2.5 py-2 text-sm text-ink placeholder:text-ink-soft/70 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25"
+      />
+      <p className="text-xs text-ink-soft mt-1">
+        Optional — shown instead of your email everywhere in the app. You can change it later too.
+      </p>
+    </div>
+  );
+}
+
 const components = {
   Header() {
     return (
@@ -139,15 +182,10 @@ const components = {
       </div>
     );
   },
+  SignUp: {
+    Header: SignUpNameField,
+  },
 };
-
-// No Cognito-attribute-based sign-up field for a display name (e.g. via
-// signUpAttributes={['nickname']}): that requires the user pool client to
-// have write permission for that attribute, which — like the schema
-// attribute itself — is a create-time-only setting on an already-deployed
-// pool (confirmed against a real failed deploy). The display name is
-// captured entirely on the app side after sign-up instead — see
-// PlayerContext.tsx (needsDisplayName) and Navbar's EditableName.
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (

@@ -3,13 +3,35 @@ import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 const schema = a.schema({
   Player: a
     .model({
+      // Explicit (not the implicit auto-id) because it must be set to the
+      // caller's own Cognito sub at create time (see PlayerContext.tsx) —
+      // and once any field on this model has its own field-level auth
+      // (isEliminated/eliminatedWeek below do), Amplify switches to a
+      // strict per-field allow-list for create/update and never puts the
+      // implicit id field on it, even for the owner rule that otherwise
+      // has full CRUD. Left off, every non-admin's own Player.create was
+      // rejected with "Unauthorized on [id]" (confirmed by reading the
+      // deployed resolver's auth function directly) — invisible to
+      // testing as an admin, since the admins group rule is authorized on
+      // all fields and skips this check entirely.
+      id: a.id().required().authorization((allow) => [
+        allow.owner().to(['read', 'create']),
+        allow.group('admins'),
+        allow.authenticated().to(['read']),
+      ]),
       displayName: a.string().required(),
       // Elimination state is grading output, not player-editable profile
       // data — field-level auth overrides the model-level rule below, so
       // it must repeat every grant this field still needs, including
       // authenticated read (standings shows everyone's status, not just
       // your own).
-      isEliminated: a.boolean().default(false).authorization((allow) => [
+      // No .default() — a default value gets injected into the mutation
+      // input before field-auth runs, and owner/authenticated only have
+      // 'read' here, so a non-admin's own Player.create would fail with
+      // "Unauthorized on [isEliminated]" (same bug already worked around
+      // on Pick.result below). A missing value reads as falsy everywhere
+      // this field is used (page.tsx, StandingsPanel, AdminPlayersPanel).
+      isEliminated: a.boolean().authorization((allow) => [
         allow.owner().to(['read']),
         allow.group('admins'),
         allow.authenticated().to(['read']),

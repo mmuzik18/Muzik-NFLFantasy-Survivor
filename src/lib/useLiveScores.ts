@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import type { NormalizedGame } from "./espn";
 
-const POLL_MS = 30_000;
+// Poll briskly while a game the caller is watching is actually live, and
+// back off when nothing's in progress — no reason to hammer ESPN's public
+// endpoint every 15s during a Tuesday with no games on.
+const POLL_MS_LIVE = 15_000;
+const POLL_MS_IDLE = 45_000;
 
 type State = {
   games: NormalizedGame[];
@@ -25,12 +29,14 @@ export function useLiveScores(week: number, season: number) {
         const body = await res.json();
         if (cancelled) return;
         if (!res.ok) throw new Error(body.error ?? `Request failed: ${res.status}`);
-        setState({ games: body.games as NormalizedGame[], loading: false, error: null });
+        const games = body.games as NormalizedGame[];
+        setState({ games, loading: false, error: null });
+        const anyLive = games.some((g) => g.status === "IN_PROGRESS");
+        timer = setTimeout(load, anyLive ? POLL_MS_LIVE : POLL_MS_IDLE);
       } catch (e) {
         if (cancelled) return;
         setState((s) => ({ ...s, loading: false, error: e instanceof Error ? e.message : String(e) }));
-      } finally {
-        if (!cancelled) timer = setTimeout(load, POLL_MS);
+        if (!cancelled) timer = setTimeout(load, POLL_MS_IDLE);
       }
     }
 

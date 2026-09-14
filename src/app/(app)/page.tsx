@@ -13,6 +13,8 @@ import { WeekTabs } from "@/components/WeekTabs";
 import { ResultBadge } from "@/components/ResultBadge";
 import { PicksPanel } from "@/components/PicksPanel";
 import { StandingsPanel } from "@/components/StandingsPanel";
+import { Spinner, SkeletonRows } from "@/components/Spinner";
+import { useToast } from "@/components/ToastProvider";
 
 type Player = Schema["Player"]["type"];
 type Pick = Schema["Pick"]["type"];
@@ -25,10 +27,14 @@ function nextWeekFor(picks: Pick[], playerId: string | undefined): number {
 
 export default function Home() {
   const { myPlayer, loading: playerLoading } = usePlayer();
+  const toast = useToast();
   const [players, setPlayers] = useState<Player[]>([]);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Starts false, not true: if myPlayer never loads (e.g. Player.create
+  // fails for this account), the effect below never runs and this would
+  // otherwise be stuck at its initial value forever — see isLoading.
+  const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
@@ -157,6 +163,9 @@ export default function Home() {
       if (res.errors) {
         setError(JSON.stringify(res.errors));
         console.error("Pick save errors", res.errors);
+        toast.error("Couldn't save your pick — try again.");
+      } else {
+        toast.success(`Pick saved: ${team} for week ${pickWeek}.`);
       }
       await refresh();
     } finally {
@@ -167,8 +176,13 @@ export default function Home() {
   const isLoading = playerLoading || loading;
 
   return (
-    <div className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
-      {isLoading && <p className="text-sm text-ink-soft">Loading...</p>}
+    <div id="main-content" className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
+      {isLoading && (
+        <>
+          <Spinner label="Loading the pool..." />
+          <SkeletonRows rows={4} />
+        </>
+      )}
       {error && (
         <p className="text-sm text-loss bg-loss-bg border border-loss/30 rounded-md px-3 py-2">
           {error}
@@ -189,7 +203,9 @@ export default function Home() {
             </section>
           ) : (
             <>
-              <WeekTabs current={viewWeek} pickedWeeks={pickedWeeks} onSelect={setSelectedWeek} />
+              <div className="sticky top-16 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-background/95 backdrop-blur-sm border-b border-line">
+                <WeekTabs current={viewWeek} pickedWeeks={pickedWeeks} onSelect={setSelectedWeek} />
+              </div>
 
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <h1 className="font-display text-2xl uppercase tracking-wide text-ink">
@@ -212,6 +228,7 @@ export default function Home() {
                 usedTeams={usedTeams}
                 highlightTeam={viewPick?.team ?? null}
                 confirmedTeam={viewPick?.team ?? null}
+                pickResult={viewPick?.result ?? null}
                 onConfirm={confirmPick}
                 confirming={confirming}
                 loading={viewWeekLive.loading}

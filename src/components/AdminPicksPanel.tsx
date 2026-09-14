@@ -24,15 +24,21 @@ export function AdminPicksPanel({
     <section className="rounded-xl border border-line bg-card shadow-[var(--shadow-card)] p-5">
       <h2 className="font-display uppercase tracking-wide text-ink text-lg mb-1">All picks</h2>
       <p className="text-xs text-ink-soft mb-3">
-        Grade a pending pick, or delete one entirely — e.g. to reset a player who wants a clean
-        slate. Deleting frees up that team and that week for them again.
+        Pending picks are graded automatically once their game goes final — the scheduled sync
+        handles it, no need to grade by hand. The Win/Loss buttons below are a manual override for
+        edge cases (e.g. a game ESPN never marks final). You can also delete a pick entirely — e.g.
+        to reset a player who wants a clean slate — which frees up that team and that week for them
+        again.
       </p>
       {sorted.length === 0 ? (
         <p className="text-sm text-ink-soft">No picks yet.</p>
       ) : (
         <ul className="divide-y divide-line">
           {sorted.map((p) => (
-            <li key={p.id} className="py-2.5 flex items-center justify-between gap-2 flex-wrap">
+            <li
+              key={p.id}
+              className="py-2.5 px-2 -mx-2 rounded-md flex items-center justify-between gap-2 flex-wrap transition-colors hover:bg-background"
+            >
               <span className="text-sm text-ink">
                 Week {p.week} — <span className="text-ink-soft">{nameFor(p.playerId)}</span> — {p.team}
               </span>
