@@ -228,6 +228,7 @@ export default function Home() {
                 usedTeams={usedTeams}
                 highlightTeam={viewPick?.team ?? null}
                 confirmedTeam={viewPick?.team ?? null}
+                pickResult={viewPick?.result ?? null}
                 onConfirm={confirmPick}
                 confirming={confirming}
                 loading={viewWeekLive.loading}

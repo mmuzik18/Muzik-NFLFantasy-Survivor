@@ -1,0 +1,41 @@
+name: Sync NFL scores
+
+# Runs scripts/sync-scores.ts on a schedule so picks get graded automatically
+# — no admin has to click Win/Loss by hand or run the script locally. See the
+# "Syncing NFL scores" section of the README for the one-time secrets setup
+# this workflow needs.
+on:
+  schedule:
+    # Every 15 minutes, Thursday through Tuesday (UTC day-of-week: 4=Thu,
+    # 5=Fri, 6=Sat, 0=Sun, 1=Mon, 2=Tue). That window covers every NFL
+    # kickoff slot (Thu/Sun/Mon night, Sunday early/late, occasional
+    # Fri/Sat games) plus the late games finishing after midnight UTC.
+    # Wednesday is skipped since no NFL games are ever played that day.
+    - cron: "*/15 * * * 4,5,6,0,1,2"
+  # Lets an admin trigger a sync on demand from the Actions tab instead of
+  # running `npm run sync-scores` locally.
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Write amplify_outputs.production.json
+        run: echo "$AMPLIFY_OUTPUTS_PRODUCTION" > amplify_outputs.production.json
+        env:
+          AMPLIFY_OUTPUTS_PRODUCTION: ${{ secrets.AMPLIFY_OUTPUTS_PRODUCTION }}
+
+      - name: Sync scores and grade pending picks
+        run: npm run sync-scores
+        env:
+          SYNC_ADMIN_EMAIL: ${{ secrets.SYNC_ADMIN_EMAIL }}
+          SYNC_ADMIN_PASSWORD: ${{ secrets.SYNC_ADMIN_PASSWORD }}

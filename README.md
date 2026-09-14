@@ -24,14 +24,25 @@ with an AWS Amplify Gen 2 backend (Cognito auth + AppSync/DynamoDB data).
   by the player, though (see Authorization below), so this can't be used
   to self-grade a pick or move it to a different week; only an admin can
   fix either of those.
+- Trying to pick a team you've already used in an earlier week shows an
+  error toast instead of selecting it — a team can only carry you once per
+  season.
+- Once a pick's game goes final, that team's row on the board turns green
+  (you won) or red (you lost) instead of the plain "your pick" gold — no
+  need to check the score yourself.
 - Game scores and results sync from ESPN's public scoreboard via
   `npm run sync-scores`, which also auto-grades any pending picks whose game
-  just went final.
+  just went final. A scheduled GitHub Action
+  (`.github/workflows/sync-scores.yml`) runs this automatically every 15
+  minutes during game windows, so grading happens hands-free — see "Syncing
+  NFL scores" below for the one-time secrets setup it needs.
 - `/admin` (visible only to the `admins` Cognito group, appears as a tab
   once you're in it) lets an admin grade or delete any pick, and manually
   mark a player eliminated for some other reason (e.g. they dropped out) —
   the `isEliminated` field still exists for that, it's just no longer set
-  automatically by a loss.
+  automatically by a loss. The Win/Loss buttons there are now just a manual
+  override/fallback (e.g. a game ESPN never marks final) — the scheduled
+  sync grades everything else automatically.
 - `/rules` and `/admin` are tabs inside the signed-in app, alongside the
   pool itself — there's no public, signed-out version of either.
 
@@ -99,8 +110,22 @@ actually sees.
    npm run sync-scores -- --week 3 --season 2026
    ```
 
-For live updates during game day, run it on a schedule (cron, a scheduled
-GitHub Action, etc.) — e.g. every 15 minutes while games are in progress.
+For live updates during game day, run it on a schedule. This repo already
+includes `.github/workflows/sync-scores.yml`, which runs it automatically
+every 15 minutes, Thursday through Tuesday (covering every NFL kickoff slot
+and the late games finishing after midnight UTC). To turn it on, add these
+three **repository secrets** (Settings → Secrets and variables → Actions →
+New repository secret):
+
+- `SYNC_ADMIN_EMAIL` / `SYNC_ADMIN_PASSWORD` — same admin account described
+  in step 2 above.
+- `AMPLIFY_OUTPUTS_PRODUCTION` — the full contents of your
+  `amplify_outputs.production.json` file (steps 1 above), pasted as-is.
+
+Once those three secrets exist, grading is fully automatic — no one needs to
+run the script by hand or click Win/Loss in `/admin` anymore. You can still
+trigger a sync on demand from the repo's Actions tab
+("Sync NFL scores" → "Run workflow"), or locally as before.
 
 ### Deploying on AWS Amplify Hosting
 

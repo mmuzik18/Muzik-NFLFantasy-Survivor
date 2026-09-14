@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { formatQuarter, type NormalizedGame } from "@/lib/espn";
+import { useToast } from "./ToastProvider";
 
 type Mode = "picking" | "watching" | "locked";
+type PickResult = "WIN" | "LOSS" | string | null | undefined;
 
 function formatKickoff(iso: string) {
   try {
@@ -19,6 +21,28 @@ function formatKickoff(iso: string) {
   }
 }
 
+/** How a highlighted/selected row or card should read: "win"/"loss" once
+ * that pick's game is graded final, "pick" (plain gold) otherwise. */
+type Tone = "pick" | "win" | "loss";
+
+function toneOf(pickResult: PickResult): Tone {
+  if (pickResult === "WIN") return "win";
+  if (pickResult === "LOSS") return "loss";
+  return "pick";
+}
+
+const ROW_TONE_CLASSES: Record<Tone, string> = {
+  pick: "bg-gold/20 ring-1 ring-inset ring-gold",
+  win: "bg-win-bg ring-1 ring-inset ring-win",
+  loss: "bg-loss-bg ring-1 ring-inset ring-loss",
+};
+
+const CARD_TONE_CLASSES: Record<Tone, string> = {
+  pick: "border-gold ring-1 ring-gold",
+  win: "border-win ring-1 ring-win",
+  loss: "border-loss ring-1 ring-loss",
+};
+
 function TeamRow({
   team,
   score,
@@ -27,6 +51,7 @@ function TeamRow({
   used,
   selected,
   highlighted,
+  tone,
   onClick,
 }: {
   team: string;
@@ -36,20 +61,27 @@ function TeamRow({
   used: boolean;
   selected: boolean;
   highlighted: boolean;
+  tone: Tone;
   onClick: () => void;
 }) {
+  // A used team stays enabled while the board is otherwise pickable (not
+  // `disabled`) so clicking it can surface an error instead of doing
+  // nothing — see PickBoard's pickTeam. Outside picking mode there's
+  // nothing to pick, so the row is disabled entirely, same as before.
   const active = clickable && !used;
   return (
     <button
       type="button"
-      disabled={!active}
+      disabled={!clickable}
       onClick={onClick}
       className={`w-full flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
         selected || highlighted
-          ? "bg-gold/20 ring-1 ring-inset ring-gold"
+          ? ROW_TONE_CLASSES[tone]
           : active
             ? "hover:bg-background cursor-pointer"
-            : ""
+            : used && clickable
+              ? "cursor-not-allowed"
+              : ""
       } ${used && clickable ? "opacity-40" : ""}`}
     >
       <span className={`text-sm ${won ? "font-semibold text-ink" : "text-ink-soft"}`}>
@@ -69,6 +101,7 @@ function GameCard({
   usedTeams,
   selectedTeam,
   highlightTeam,
+  pickResult,
   onPickTeam,
 }: {
   game: NormalizedGame;
@@ -76,16 +109,18 @@ function GameCard({
   usedTeams: Set<string>;
   selectedTeam: string | null;
   highlightTeam: string | null;
+  pickResult: PickResult;
   onPickTeam: (team: string) => void;
 }) {
   const isFinal = game.status === "FINAL";
   const isLive = game.status === "IN_PROGRESS";
   const cardHighlighted = [game.awayTeam, game.homeTeam].includes(selectedTeam ?? highlightTeam ?? "");
+  const tone = toneOf(pickResult);
 
   return (
     <div
       className={`rounded-lg border bg-card px-4 py-3 transition-colors ${
-        cardHighlighted ? "border-gold ring-1 ring-gold" : "border-line"
+        cardHighlighted ? CARD_TONE_CLASSES[tone] : "border-line"
       }`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -117,6 +152,7 @@ function GameCard({
         used={usedTeams.has(game.awayTeam)}
         selected={selectedTeam === game.awayTeam}
         highlighted={highlightTeam === game.awayTeam}
+        tone={tone}
         onClick={() => onPickTeam(game.awayTeam)}
       />
       <TeamRow
@@ -127,6 +163,7 @@ function GameCard({
         used={usedTeams.has(game.homeTeam)}
         selected={selectedTeam === game.homeTeam}
         highlighted={highlightTeam === game.homeTeam}
+        tone={tone}
         onClick={() => onPickTeam(game.homeTeam)}
       />
     </div>
@@ -140,6 +177,7 @@ export function PickBoard({
   usedTeams,
   highlightTeam = null,
   confirmedTeam = null,
+  pickResult = null,
   onConfirm,
   confirming = false,
   loading = false,
@@ -154,12 +192,17 @@ export function PickBoard({
    * "picking" this pre-selects it and lets the player pick a different
    * team instead, right up until the week locks. */
   confirmedTeam?: string | null;
+  /** The graded result ("WIN"/"LOSS", or null while pending) of the pick
+   * being shown — colors the highlighted team/card green or red once its
+   * game is final, instead of the plain "this is your pick" gold. */
+  pickResult?: PickResult;
   onConfirm?: (team: string) => void;
   confirming?: boolean;
   loading?: boolean;
   statusMessage?: string | null;
 }) {
   const [selected, setSelected] = useState<string | null>(confirmedTeam);
+  const toast = useToast();
   const sorted = [...games].sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   // A team already assigned to this week isn't "used" from this board's
@@ -170,7 +213,11 @@ export function PickBoard({
       : usedTeams;
 
   function pickTeam(team: string) {
-    if (mode !== "picking" || selectableUsedTeams.has(team)) return;
+    if (mode !== "picking") return;
+    if (selectableUsedTeams.has(team)) {
+      toast.error(`${team} already chosen in a prior week — choose a different team.`);
+      return;
+    }
     setSelected((cur) => (cur === team ? null : team));
   }
 
@@ -227,6 +274,7 @@ export function PickBoard({
               usedTeams={selectableUsedTeams}
               selectedTeam={mode === "picking" ? selected : null}
               highlightTeam={mode !== "picking" ? highlightTeam : null}
+              pickResult={pickResult}
               onPickTeam={pickTeam}
             />
           ))}
