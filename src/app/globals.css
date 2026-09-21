@@ -1,112 +1,122 @@
 @import "tailwindcss";
 
+/* Design tokens.
+   One neutral ramp (a faint green cast so it belongs to the field-green
+   brand without reading as beige) and ONE accent. The accent doubles as
+   the "win" color: green always means good, red always means a loss.
+   Selected/locked-in picks use ink, never the accent, so a pending pick
+   can't be mistaken for a graded win.
+   Shape rule: everything is Tailwind's rounded-md (6px). No pills, no
+   circles, no mixed radii. */
 :root {
-  --background: #f7f3e8;
-  --foreground: #17140f;
+  --background: #eef0ec;
+  --foreground: #0d1512;
 
-  --color-field: #0b2e1d;
-  --color-field-2: #123825;
-  --color-gold: #c8912f;
-  --color-gold-soft: #e9c98a;
-  --color-cream: #f7f3e8;
-  --color-card: #fffdf8;
-  --color-ink: #17140f;
-  --color-ink-soft: #5b5548;
-  --color-line: #e4dcc5;
+  --color-paper: #eef0ec;
+  --color-surface: #f8f9f6;
+  --color-sunk: #e3e7e2;
+  --color-ink: #0d1512;
+  --color-muted: #56625b;
+  --color-line: #d3d9d3;
 
-  --color-win: #2f7a4d;
-  --color-win-bg: #e6f2ea;
-  --color-loss: #a8382c;
-  --color-loss-bg: #f7e8e6;
-  --color-pending: #9c7a2e;
-  --color-pending-bg: #f3ecd8;
+  --color-accent: #0f6a3d;
+  --color-on-accent: #f4faf6;
 
-  --shadow-card: 0 1px 2px rgba(23, 20, 15, 0.04), 0 6px 16px -8px rgba(23, 20, 15, 0.12);
+  --color-win: #0f6a3d;
+  --color-win-soft: #dcefe3;
+  --color-loss: #b42a20;
+  --color-loss-soft: #f6e0dd;
+
+  --shadow-float: 0 14px 32px -14px rgb(13 21 18 / 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --color-field: var(--color-field);
-  --color-field-2: var(--color-field-2);
-  --color-gold: var(--color-gold);
-  --color-gold-soft: var(--color-gold-soft);
-  --color-cream: var(--color-cream);
-  --color-card: var(--color-card);
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-sunk: var(--color-sunk);
   --color-ink: var(--color-ink);
-  --color-ink-soft: var(--color-ink-soft);
+  --color-muted: var(--color-muted);
   --color-line: var(--color-line);
 
+  --color-accent: var(--color-accent);
+  --color-on-accent: var(--color-on-accent);
+
   --color-win: var(--color-win);
-  --color-win-bg: var(--color-win-bg);
+  --color-win-soft: var(--color-win-soft);
   --color-loss: var(--color-loss);
-  --color-loss-bg: var(--color-loss-bg);
-  --color-pending: var(--color-pending);
-  --color-pending-bg: var(--color-pending-bg);
+  --color-loss-soft: var(--color-loss-soft);
+
+  --shadow-float: var(--shadow-float);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-oswald);
-  --font-score: var(--font-anton);
+  /* Big Shoulders is for numerals (scores, weeks, records) and page-level
+     titles only. Everything else is Geist. */
+  --font-display: var(--font-big-shoulders);
 }
 
 /* Dark palette lives in one place and applies three ways: the OS-level
    media query (default "system" behavior, only when no manual choice has
-   been made), and the explicit [data-theme] override ThemeToggle sets —
+   been made), and the explicit [data-theme] override ThemeToggle sets,
    in both directions so a manual choice always wins over the OS setting. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: #0c1210;
-    --foreground: #f2ede0;
+    --background: #0a100d;
+    --foreground: #edf2ee;
 
-    --color-field: #0b2e1d;
-    --color-field-2: #16452c;
-    --color-gold: #dba84a;
-    --color-gold-soft: #efcd8b;
-    --color-cream: #0c1210;
-    --color-card: #141b17;
-    --color-ink: #f2ede0;
-    --color-ink-soft: #a7a396;
-    --color-line: #263229;
+    --color-paper: #0a100d;
+    --color-surface: #111a15;
+    --color-sunk: #182119;
+    --color-ink: #edf2ee;
+    --color-muted: #8fa096;
+    --color-line: #22302a;
 
-    --color-win: #4bab73;
-    --color-win-bg: #14261c;
-    --color-loss: #e0685a;
-    --color-loss-bg: #2a1815;
-    --color-pending: #d9b563;
-    --color-pending-bg: #262013;
+    --color-accent: #43c98a;
+    --color-on-accent: #04140b;
 
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+    --color-win: #43c98a;
+    --color-win-soft: #0f2a1c;
+    --color-loss: #ff7d6e;
+    --color-loss-soft: #2e1512;
+
+    --shadow-float: 0 14px 32px -14px rgb(0 0 0 / 0.7);
   }
 }
 
 :root[data-theme="dark"] {
-  --background: #0c1210;
-  --foreground: #f2ede0;
+  --background: #0a100d;
+  --foreground: #edf2ee;
 
-  --color-field: #0b2e1d;
-  --color-field-2: #16452c;
-  --color-gold: #dba84a;
-  --color-gold-soft: #efcd8b;
-  --color-cream: #0c1210;
-  --color-card: #141b17;
-  --color-ink: #f2ede0;
-  --color-ink-soft: #a7a396;
-  --color-line: #263229;
+  --color-paper: #0a100d;
+  --color-surface: #111a15;
+  --color-sunk: #182119;
+  --color-ink: #edf2ee;
+  --color-muted: #8fa096;
+  --color-line: #22302a;
 
-  --color-win: #4bab73;
-  --color-win-bg: #14261c;
-  --color-loss: #e0685a;
-  --color-loss-bg: #2a1815;
-  --color-pending: #d9b563;
-  --color-pending-bg: #262013;
+  --color-accent: #43c98a;
+  --color-on-accent: #04140b;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+  --color-win: #43c98a;
+  --color-win-soft: #0f2a1c;
+  --color-loss: #ff7d6e;
+  --color-loss-soft: #2e1512;
+
+  --shadow-float: 0 14px 32px -14px rgb(0 0 0 / 0.7);
 }
 
-* {
-  border-color: var(--color-line);
+/* Layered so Tailwind's border-* utilities (border-ink, border-loss/30,
+   border-transparent...) can override this default. Unlayered CSS would
+   always win over them. */
+@layer base {
+  *,
+  ::after,
+  ::before {
+    border-color: var(--color-line);
+  }
 }
 
 body {
@@ -115,27 +125,38 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* One focus treatment everywhere: a 2px ink ring, offset so it never
+   touches the control's own border. */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Horizontal strips (the week selector) scroll on phones without a
+   visible scrollbar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Amplify Authenticator shell (the sign-in / sign-up screen). Selectors
    target the library's own data-attributes on [data-amplify-authenticator]
-   (outer, full-bleed) and [data-amplify-router] (the form card) — see
-   node_modules/@aws-amplify/ui-react RouteContainer for the DOM shape. */
+   (outer, full-bleed) and [data-amplify-router] (the form card), see
+   node_modules/@aws-amplify/ui-react RouteContainer for the DOM shape.
+   Colors come from the same tokens as the app so light and dark both work. */
 [data-amplify-authenticator] {
   min-height: 100dvh;
-  padding: 2.5rem 1.25rem;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.05) 0px,
-      rgba(255, 255, 255, 0.05) 1px,
-      transparent 1px,
-      transparent 64px
-    ),
-    radial-gradient(ellipse at top, #123825 0%, #0b2e1d 70%);
+  padding: 3rem 1.25rem;
+  background: var(--color-paper);
 }
 
 [data-amplify-authenticator] [data-amplify-router] {
-  border-radius: 14px;
+  border-radius: 6px;
   overflow: hidden;
+  box-shadow: var(--shadow-float);
 }
 
 /* Skip-to-content link: off-screen until keyboard-focused, then docks at
@@ -145,10 +166,10 @@ body {
   top: -3rem;
   left: 0.75rem;
   z-index: 100;
-  background: var(--color-gold);
-  color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-paper);
   padding: 0.5rem 1rem;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 6px 6px;
   font-weight: 600;
   font-size: 0.875rem;
   transition: top 0.15s ease;
@@ -171,6 +192,24 @@ body {
   animation: toast-in 0.2s ease-out;
 }
 
+/* Game tiles rise in as a group when a week loads, staggered by their
+   --i index (set inline, capped in the component). The stagger tells you
+   the schedule is a sequence in kickoff order. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-rise {
+  animation: rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
 @keyframes skeleton-pulse {
   0%,
   100% {
@@ -186,6 +225,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-toast-in,
+  .animate-rise,
   .animate-skeleton {
     animation: none;
   }

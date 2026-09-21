@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthenticator } from "@aws-amplify/ui-react";
+import { List, X } from "@phosphor-icons/react";
 import { BrandMark } from "./BrandMark";
 import { EditableName } from "./EditableName";
 import { ThemeToggle } from "./ThemeToggle";
@@ -30,24 +31,25 @@ export function Navbar() {
   ];
 
   return (
-    <header className="no-print sticky top-0 z-20 border-b border-[#0b2e1d] bg-field">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+    <header className="no-print sticky top-0 z-20 border-b border-line bg-paper">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-8 px-4 sm:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <BrandMark size={26} />
-          <span className="font-display uppercase tracking-wide text-[#f7f3e8] text-base sm:text-lg">
-            Muzik Survivor
-          </span>
+          <span className="text-[15px] font-semibold tracking-tight text-ink">Muzik Survivor</span>
         </Link>
 
-        <nav className="hidden sm:flex items-center gap-1 rounded-lg bg-black/20 p-1">
+        <nav aria-label="Main" className="hidden h-full items-stretch gap-6 sm:flex">
           {tabs.map((tab) => {
             const active = pathname === tab.href;
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  active ? "bg-gold text-ink" : "text-[#c9c3b2] hover:text-[#f7f3e8]"
+                aria-current={active ? "page" : undefined}
+                className={`-mb-px flex items-center border-b-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "border-ink text-ink"
+                    : "border-transparent text-muted hover:text-ink"
                 }`}
               >
                 {tab.label}
@@ -56,30 +58,24 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="hidden sm:flex items-center gap-3 sm:gap-4">
+        <div className="ml-auto hidden items-center gap-1 sm:flex">
           <SiteSearch admin={admin} />
           <ThemeToggle />
-          <div className="flex items-center gap-2 text-sm">
-            {myPlayer ? (
-              <EditableName name={displayName} onSave={updateDisplayName} />
-            ) : (
-              <span className="text-[#f7f3e8] font-medium">{displayName}</span>
-            )}
-            {admin && (
-              <span className="rounded-full bg-gold/20 text-gold-soft text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5">
-                Admin
-              </span>
-            )}
-          </div>
+          <span className="mx-3 h-5 w-px bg-line" aria-hidden="true" />
+          {myPlayer ? (
+            <EditableName name={displayName} onSave={updateDisplayName} />
+          ) : (
+            <span className="text-sm font-medium text-ink">{displayName}</span>
+          )}
           <button
             onClick={signOut}
-            className="text-sm text-[#c9c3b2] border border-[#2d4436] rounded-md px-3 py-1.5 hover:border-gold hover:text-gold-soft transition-colors cursor-pointer"
+            className="ml-3 cursor-pointer rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-sunk hover:text-ink"
           >
             Sign out
           </button>
         </div>
 
-        <div className="flex sm:hidden items-center gap-1">
+        <div className="ml-auto flex items-center gap-1 sm:hidden">
           <SiteSearch admin={admin} />
           <ThemeToggle />
           <button
@@ -87,55 +83,47 @@ export function Navbar() {
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
-            className="w-9 h-9 flex items-center justify-center rounded-md text-[#c9c3b2] hover:text-gold-soft hover:bg-black/20 transition-colors cursor-pointer"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-sunk hover:text-ink"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {mobileOpen ? (
-                <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-              ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
-              )}
-            </svg>
+            {mobileOpen ? <X size={20} /> : <List size={20} />}
           </button>
         </div>
       </div>
 
       {mobileOpen && (
-        <div className="sm:hidden border-t border-[#0b2e1d] bg-field px-4 pb-4 pt-2 flex flex-col gap-1">
-          {tabs.map((tab) => {
-            const active = pathname === tab.href;
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={`px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                  active ? "bg-gold text-ink" : "text-[#c9c3b2] hover:bg-black/20 hover:text-[#f7f3e8]"
-                }`}
-              >
-                {tab.label}
-              </Link>
-            );
-          })}
-          <div className="flex items-center justify-between px-3 py-2.5 border-t border-[#2d4436] mt-1 pt-3">
-            <div className="flex items-center gap-2 text-sm min-w-0">
+        <div className="border-t border-line bg-paper px-4 pt-2 pb-4 sm:hidden">
+          <nav aria-label="Main" className="flex flex-col">
+            {tabs.map((tab) => {
+              const active = pathname === tab.href;
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-md px-3 py-3 text-[15px] font-medium transition-colors ${
+                    active ? "bg-sunk text-ink" : "text-muted hover:bg-sunk hover:text-ink"
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="mt-2 flex items-center justify-between gap-3 border-t border-line px-3 pt-4">
+            <div className="min-w-0 truncate">
               {myPlayer ? (
                 <EditableName name={displayName} onSave={updateDisplayName} />
               ) : (
-                <span className="text-[#f7f3e8] font-medium truncate">{displayName}</span>
-              )}
-              {admin && (
-                <span className="shrink-0 rounded-full bg-gold/20 text-gold-soft text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5">
-                  Admin
-                </span>
+                <span className="text-sm font-medium text-ink">{displayName}</span>
               )}
             </div>
+            <button
+              onClick={signOut}
+              className="shrink-0 cursor-pointer rounded-md border border-line px-3 py-1.5 text-sm text-ink transition-colors hover:bg-sunk"
+            >
+              Sign out
+            </button>
           </div>
-          <button
-            onClick={signOut}
-            className="text-sm text-left text-[#c9c3b2] border border-[#2d4436] rounded-md px-3 py-2 hover:border-gold hover:text-gold-soft transition-colors cursor-pointer"
-          >
-            Sign out
-          </button>
         </div>
       )}
     </header>

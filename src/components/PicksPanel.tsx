@@ -3,37 +3,37 @@ import { ResultBadge } from "./ResultBadge";
 
 export function PicksPanel({ picks }: { picks: PickWithGame[] }) {
   return (
-    <section className="rounded-xl border border-line bg-card shadow-[var(--shadow-card)] p-5">
-      <h2 className="font-display uppercase tracking-wide text-ink text-lg mb-4">Pick history</h2>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading" className="mb-3 text-[15px] font-semibold text-ink">
+        Pick history
+      </h2>
 
       {picks.length === 0 ? (
-        <p className="text-sm text-ink-soft">No decided picks yet.</p>
+        <p className="text-sm text-muted">
+          No decided picks yet. Graded picks show up here once your games go final.
+        </p>
       ) : (
-        <ul className="divide-y divide-line">
+        <ol className="flex flex-col gap-0.5">
           {picks.map(({ pick, game, opponent, pickScore, opponentScore }) => (
             <li
               key={pick.id}
-              className="py-2.5 px-2 -mx-2 rounded-md flex items-center justify-between gap-3 transition-colors hover:bg-background"
+              className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 rounded-md px-2 py-2"
             >
-              <div>
-                <p className="text-sm font-medium text-ink">
-                  Week {pick.week} — {pick.team}
+              <span className="font-display text-xl leading-none font-semibold tabular-nums text-muted">
+                {pick.week}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-ink">{pick.team}</p>
+                <p className="truncate text-xs text-muted">
+                  {game
+                    ? `${pickScore !== null && opponentScore !== null ? `${pickScore}-${opponentScore} ` : ""}${opponent ? `vs ${opponent}` : ""}`.trim()
+                    : "Game not synced yet"}
                 </p>
-                {game ? (
-                  <p className="text-xs text-ink-soft">
-                    {opponent ? `vs ${opponent}` : ""}
-                    {pickScore !== null && opponentScore !== null
-                      ? ` · ${pickScore}-${opponentScore}`
-                      : ""}
-                  </p>
-                ) : (
-                  <p className="text-xs text-ink-soft">Game not synced yet</p>
-                )}
               </div>
               <ResultBadge result={pick.result} />
             </li>
           ))}
-        </ul>
+        </ol>
       )}
     </section>
   );

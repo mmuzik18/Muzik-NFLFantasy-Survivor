@@ -24,7 +24,7 @@ export function WelcomeNamePrompt() {
       await updateDisplayName(trimmed);
       toast.success(`Welcome, ${trimmed}!`);
     } catch (e) {
-      setError("Couldn't save that name — try again.");
+      setError("Couldn't save that name. Try again.");
       console.error(e);
     } finally {
       setSaving(false);
@@ -32,40 +32,45 @@ export function WelcomeNamePrompt() {
   }
 
   return (
-    <div className="no-print bg-gold/10 border-b border-gold/40">
+    <div className="no-print border-b border-line bg-sunk">
       <form
         onSubmit={save}
-        className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-2.5"
+        className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-6"
       >
-        <span className="text-sm text-ink font-medium shrink-0">
+        <label htmlFor="welcome-display-name" className="shrink-0 text-sm font-medium text-ink">
           Welcome! What should we call you?
-        </span>
+        </label>
         <input
+          id="welcome-display-name"
           autoFocus
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Display name"
           maxLength={40}
           aria-invalid={error ? true : undefined}
-          className={`flex-1 min-w-[140px] text-sm rounded-md border bg-card px-2 py-1.5 text-ink focus:outline-none ${
-            error ? "border-loss focus:border-loss" : "border-line focus:border-gold"
+          className={`min-w-[10rem] flex-1 rounded-md border bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted ${
+            error ? "border-loss" : "border-line focus:border-ink"
           }`}
         />
         <button
           type="submit"
           disabled={!value.trim() || saving}
-          className="bg-gold text-ink text-sm font-semibold rounded-md px-3 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gold-soft transition-colors cursor-pointer"
+          className="cursor-pointer rounded-md bg-accent px-4 py-2 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? "Saving..." : "Save"}
         </button>
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          className="text-xs text-ink-soft hover:text-ink transition-colors cursor-pointer"
+          className="cursor-pointer text-sm text-muted transition-colors hover:text-ink"
         >
           Skip for now
         </button>
-        {error && <p className="w-full text-xs text-loss">{error}</p>}
+        {error && (
+          <p role="alert" className="w-full text-sm text-loss">
+            {error}
+          </p>
+        )}
       </form>
     </div>
   );

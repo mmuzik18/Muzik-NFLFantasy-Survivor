@@ -2,11 +2,10 @@ import { BrandMark } from "@/components/BrandMark";
 
 export default function Loading() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6">
-      <div className="animate-pulse">
+    <div className="flex flex-1 items-center justify-center p-6" role="status" aria-label="Loading">
+      <div className="motion-safe:animate-pulse">
         <BrandMark size={36} />
       </div>
-      <p className="text-sm text-ink-soft">Loading...</p>
     </div>
   );
 }

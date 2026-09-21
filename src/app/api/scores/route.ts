@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const rateLimit = checkRateLimit(clientKeyFrom(request));
   if (!rateLimit.allowed) {
     return Response.json(
-      { error: "Too many requests — slow down." },
+      { error: "Too many requests. Slow down." },
       { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
     );
   }

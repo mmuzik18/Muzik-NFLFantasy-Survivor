@@ -15,19 +15,20 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
-      <BrandMark size={40} />
-      <h1 className="font-display text-3xl uppercase tracking-wide text-ink">Flag on the play</h1>
-      <p className="text-sm text-ink-soft max-w-sm">
-        Something went wrong loading the pool. Try again — if it keeps happening, let the
-        commissioner know.
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-start justify-center gap-5 px-4 py-24 sm:px-6">
+      <BrandMark size={32} />
+      <h1 className="font-display text-[clamp(3.5rem,10vw,7rem)] leading-[0.85] font-bold tracking-tight text-ink">
+        Something went wrong
+      </h1>
+      <p className="max-w-[46ch] leading-relaxed text-muted">
+        The pool didn&apos;t load. Try again, and if it keeps happening, let the commissioner know.
       </p>
       <button
         onClick={reset}
-        className="mt-2 bg-gold text-ink font-semibold rounded-md px-4 py-2 text-sm hover:bg-gold-soft transition-colors cursor-pointer"
+        className="cursor-pointer rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 active:translate-y-px"
       >
         Try again
       </button>
-    </div>
+    </main>
   );
 }

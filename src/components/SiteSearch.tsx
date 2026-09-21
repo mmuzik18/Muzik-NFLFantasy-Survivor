@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import { FAQS, RULES } from "@/lib/siteContent";
 
 type Entry = { title: string; snippet: string; href: string };
@@ -63,18 +64,15 @@ export function SiteSearch({ admin }: { admin: boolean }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search the site"
-        title="Search (⌘K)"
-        className="w-8 h-8 shrink-0 flex items-center justify-center rounded-md text-[#c9c3b2] hover:text-gold-soft hover:bg-black/20 transition-colors cursor-pointer"
+        title="Search (Cmd+K)"
+        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-sunk hover:text-ink"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m21 21-4.3-4.3" strokeLinecap="round" />
-        </svg>
+        <MagnifyingGlass size={18} />
       </button>
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-28 px-4 bg-black/50"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-20 sm:pt-28"
           role="presentation"
           onClick={() => setOpen(false)}
         >
@@ -82,38 +80,38 @@ export function SiteSearch({ admin }: { admin: boolean }) {
             role="dialog"
             aria-modal="true"
             aria-label="Site search"
-            className="w-full max-w-lg rounded-xl border border-line bg-card shadow-[var(--shadow-card)] overflow-hidden"
+            className="w-full max-w-lg overflow-hidden rounded-md border border-line bg-surface shadow-float"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2 border-b border-line px-4 py-3">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-soft shrink-0">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m21 21-4.3-4.3" strokeLinecap="round" />
-              </svg>
+            <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+              <MagnifyingGlass size={18} className="shrink-0 text-muted" />
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search rules, FAQ, pages..."
-                className="flex-1 bg-transparent text-sm text-ink placeholder:text-ink-soft focus:outline-none"
+                placeholder="Search rules, FAQ, pages"
+                aria-label="Search"
+                className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
               />
-              <kbd className="text-[10px] text-ink-soft border border-line rounded px-1.5 py-0.5">Esc</kbd>
+              <kbd className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px] text-muted">
+                Esc
+              </kbd>
             </div>
 
             {query.trim() && (
-              <ul className="max-h-80 overflow-y-auto py-1.5">
+              <ul className="max-h-80 overflow-y-auto p-1.5">
                 {results.length === 0 ? (
-                  <li className="px-4 py-3 text-sm text-ink-soft">No results for &quot;{query}&quot;.</li>
+                  <li className="px-3 py-3 text-sm text-muted">No results for &quot;{query}&quot;.</li>
                 ) : (
                   results.map((r) => (
                     <li key={r.href + r.title}>
                       <button
                         type="button"
                         onClick={() => go(r.href)}
-                        className="w-full text-left px-4 py-2.5 hover:bg-background transition-colors cursor-pointer"
+                        className="w-full cursor-pointer rounded-md px-3 py-2.5 text-left transition-colors hover:bg-sunk"
                       >
                         <p className="text-sm font-medium text-ink">{r.title}</p>
-                        <p className="text-xs text-ink-soft line-clamp-1">{r.snippet}</p>
+                        <p className="line-clamp-1 text-xs text-muted">{r.snippet}</p>
                       </button>
                     </li>
                   ))

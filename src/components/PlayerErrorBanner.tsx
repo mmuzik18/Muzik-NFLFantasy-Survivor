@@ -7,8 +7,8 @@ export function PlayerErrorBanner() {
   if (!error) return null;
 
   return (
-    <div className="no-print max-w-4xl w-full mx-auto px-4 sm:px-6 pt-4">
-      <p className="text-sm text-loss bg-loss-bg border border-loss/30 rounded-md px-3 py-2">
+    <div className="no-print mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
+      <p role="alert" className="rounded-md border border-loss/30 bg-loss-soft px-3 py-2 text-sm text-loss">
         Couldn&apos;t load your player profile: {error}
       </p>
     </div>

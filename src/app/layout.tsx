@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Oswald, Anton } from "next/font/google";
+import { Geist, Geist_Mono, Big_Shoulders } from "next/font/google";
 import "./globals.css";
 import { themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/components/ToastProvider";
@@ -15,22 +15,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const oswald = Oswald({
-  variable: "--font-oswald",
+// Variable font with an optical-size axis: the browser picks the tight
+// display cut automatically at large sizes (week numerals, scores).
+const bigShoulders = Big_Shoulders({
+  variable: "--font-big-shoulders",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-const anton = Anton({
-  variable: "--font-anton",
-  subsets: ["latin"],
-  weight: "400",
+  axes: ["opsz"],
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {
   title: {
     default: "Muzik NFL Survivor",
-    template: "%s · Muzik NFL Survivor",
+    template: "%s | Muzik NFL Survivor",
   },
   description:
     "A weekly pick 'em survivor pool. Pick one NFL team to win, don't repeat a team, don't lose.",
@@ -40,14 +37,17 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b2e1d",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#eef0ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a100d" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${oswald.variable} ${anton.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${bigShoulders.variable} h-full antialiased`}
     >
       <head>
         {/* Sets data-theme before first paint so a saved dark/light choice

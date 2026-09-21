@@ -4,9 +4,9 @@
 type Result = string | null | undefined;
 
 const STYLES: Record<string, string> = {
-  WIN: "bg-win-bg text-win",
-  LOSS: "bg-loss-bg text-loss",
-  PENDING: "bg-pending-bg text-pending",
+  WIN: "bg-win-soft text-win",
+  LOSS: "bg-loss-soft text-loss",
+  PENDING: "bg-sunk text-muted",
 };
 
 const LABELS: Record<string, string> = {
@@ -19,9 +19,9 @@ export function ResultBadge({ result }: { result: Result }) {
   const key = result ?? "PENDING";
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase ${STYLES[key]}`}
+      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${STYLES[key] ?? STYLES.PENDING}`}
     >
-      {LABELS[key]}
+      {LABELS[key] ?? LABELS.PENDING}
     </span>
   );
 }

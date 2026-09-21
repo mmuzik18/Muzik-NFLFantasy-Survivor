@@ -10,10 +10,10 @@ import { useNow } from "@/lib/useNow";
 import { currentNflSeason } from "@/lib/nflWeek";
 import { PickBoard } from "@/components/PickBoard";
 import { WeekTabs } from "@/components/WeekTabs";
-import { ResultBadge } from "@/components/ResultBadge";
+import { PickSummary, formatLockTime } from "@/components/PickSummary";
 import { PicksPanel } from "@/components/PicksPanel";
 import { StandingsPanel } from "@/components/StandingsPanel";
-import { Spinner, SkeletonRows } from "@/components/Spinner";
+import { PoolSkeleton } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
 
 type Player = Schema["Player"]["type"];
@@ -50,7 +50,10 @@ export default function Home() {
   );
   const decidedPicksWithGames = useMemo(() => attachGames(decidedPicks, games), [decidedPicks, games]);
   const usedTeams = useMemo(() => new Set(myPicks.map((p) => p.team)), [myPicks]);
-  const pickedWeeks = useMemo(() => new Set(myPicks.map((p) => p.week)), [myPicks]);
+  const resultsByWeek = useMemo(
+    () => new Map(myPicks.map((p) => [p.week, p.result] as const)),
+    [myPicks],
+  );
 
   // Season win/loss record per player, for Standings — computed from every
   // player's decided picks, not just this player's.
@@ -103,7 +106,7 @@ export default function Home() {
     statusMessage = `The first game of week ${pickWeek} already kicked off and no pick was made in time.`;
   } else if (viewWeek > pickWeek) {
     boardMode = "locked";
-    statusMessage = `Week ${viewWeek} isn't open yet — you're currently on week ${pickWeek}.`;
+    statusMessage = `Week ${viewWeek} isn't open yet. You're currently on week ${pickWeek}.`;
   } else {
     // viewWeek < pickWeek with no pick found shouldn't happen (picks are
     // sequential), but fall back to locked/no-message rather than crash.
@@ -163,7 +166,7 @@ export default function Home() {
       if (res.errors) {
         setError(JSON.stringify(res.errors));
         console.error("Pick save errors", res.errors);
-        toast.error("Couldn't save your pick — try again.");
+        toast.error("Couldn't save your pick. Try again.");
       } else {
         toast.success(`Pick saved: ${team} for week ${pickWeek}.`);
       }
@@ -174,75 +177,90 @@ export default function Home() {
   }
 
   const isLoading = playerLoading || loading;
+  const eliminated = Boolean(myPlayer?.isEliminated);
 
   return (
-    <div id="main-content" className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
-      {isLoading && (
-        <>
-          <Spinner label="Loading the pool..." />
-          <SkeletonRows rows={4} />
-        </>
-      )}
-      {error && (
-        <p className="text-sm text-loss bg-loss-bg border border-loss/30 rounded-md px-3 py-2">
-          {error}
-        </p>
-      )}
-
-      {!isLoading && (
-        <>
-          {myPlayer?.isEliminated ? (
-            <section className="rounded-xl border border-line bg-card shadow-[var(--shadow-card)] p-5">
-              <h2 className="font-display uppercase tracking-wide text-ink text-lg mb-2">
-                You&apos;re out
-              </h2>
-              <p className="text-sm text-loss">
-                An admin marked you eliminated in week {myPlayer.eliminatedWeek}. If that&apos;s a
-                mistake, ask them to reinstate you.
-              </p>
-            </section>
-          ) : (
-            <>
-              <div className="sticky top-16 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-background/95 backdrop-blur-sm border-b border-line">
-                <WeekTabs current={viewWeek} pickedWeeks={pickedWeeks} onSelect={setSelectedWeek} />
-              </div>
-
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <h1 className="font-display text-2xl uppercase tracking-wide text-ink">
-                  Week {viewWeek}
-                </h1>
-                {viewPick && (
-                  <div className="flex items-center gap-2 bg-card border border-gold rounded-lg px-3 py-1.5">
-                    <span className="text-[10px] text-ink-soft uppercase tracking-wide">Your pick</span>
-                    <span className="font-semibold text-ink text-sm">{viewPick.team}</span>
-                    <ResultBadge result={viewPick.result} />
-                  </div>
-                )}
-              </div>
-
-              <PickBoard
-                key={`${viewWeek}-${boardMode}`}
-                week={viewWeek}
-                games={viewWeekLive.games}
-                mode={boardMode}
-                usedTeams={usedTeams}
-                highlightTeam={viewPick?.team ?? null}
-                confirmedTeam={viewPick?.team ?? null}
-                pickResult={viewPick?.result ?? null}
-                onConfirm={confirmPick}
-                confirming={confirming}
-                loading={viewWeekLive.loading}
-                statusMessage={statusMessage}
-              />
-            </>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PicksPanel picks={decidedPicksWithGames} />
-            <StandingsPanel players={players} records={records} />
+    <>
+      {!isLoading && !eliminated && (
+        <div className="no-print sticky top-14 z-10 border-b border-line bg-paper">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <WeekTabs current={viewWeek} resultsByWeek={resultsByWeek} onSelect={setSelectedWeek} />
           </div>
-        </>
+        </div>
       )}
-    </div>
+
+      <main id="main-content" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-20 sm:px-6">
+        {isLoading && <PoolSkeleton />}
+
+        {error && (
+          <p role="alert" className="mt-6 rounded-md border border-loss/30 bg-loss-soft px-3 py-2 text-sm text-loss">
+            {error}
+          </p>
+        )}
+
+        {!isLoading && (
+          <>
+            {eliminated ? (
+              <section className="mt-8 rounded-md bg-ink px-6 py-5 text-paper">
+                <h1 className="text-lg font-semibold tracking-tight">You&apos;re out</h1>
+                <p className="mt-1 text-sm opacity-75">
+                  An admin marked you eliminated in week {myPlayer?.eliminatedWeek}. If that&apos;s a
+                  mistake, ask them to reinstate you.
+                </p>
+              </section>
+            ) : (
+              <header className="grid gap-6 pt-8 pb-10 md:grid-cols-[1fr_auto] md:items-end">
+                <div>
+                  <h1 className="font-display text-[clamp(3.5rem,9vw,6.5rem)] leading-[0.85] font-bold tracking-tight text-ink">
+                    <span className="font-medium text-muted">Week</span> {viewWeek}
+                  </h1>
+                  {viewWeekKickoff && (
+                    <p className="mt-4 text-sm text-muted">
+                      {boardMode === "picking"
+                        ? "Picks lock "
+                        : viewWeekStarted
+                          ? "Locked since "
+                          : "First kickoff "}
+                      {formatLockTime(viewWeekKickoff)}
+                    </p>
+                  )}
+                </div>
+                <PickSummary pick={viewPick} picking={boardMode === "picking"} week={viewWeek} />
+              </header>
+            )}
+
+            <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-14">
+              {!eliminated && (
+                <PickBoard
+                  key={`${viewWeek}-${boardMode}`}
+                  week={viewWeek}
+                  games={viewWeekLive.games}
+                  mode={boardMode}
+                  usedTeams={usedTeams}
+                  highlightTeam={viewPick?.team ?? null}
+                  confirmedTeam={viewPick?.team ?? null}
+                  pickResult={viewPick?.result ?? null}
+                  onConfirm={confirmPick}
+                  confirming={confirming}
+                  loading={viewWeekLive.loading}
+                  statusMessage={statusMessage}
+                />
+              )}
+
+              <aside
+                className={
+                  eliminated
+                    ? "grid gap-12 pt-10 md:grid-cols-2 lg:col-span-full"
+                    : "flex flex-col gap-12"
+                }
+              >
+                <StandingsPanel players={players} records={records} meId={myPlayer?.id} />
+                <PicksPanel picks={decidedPicksWithGames} />
+              </aside>
+            </div>
+          </>
+        )}
+      </main>
+    </>
   );
 }

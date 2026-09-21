@@ -46,6 +46,15 @@ const ABBREVIATION_TO_TEAM: Record<string, (typeof NFL_TEAMS)[number]> = {
   WSH: "Washington Commanders",
 };
 
+const TEAM_TO_ABBREVIATION: Record<string, string> = Object.fromEntries(
+  Object.entries(ABBREVIATION_TO_TEAM).map(([abbreviation, team]) => [team, abbreviation]),
+);
+
+/** Compact scorebug-style label ("KC", "BUF") for one of this app's team names. */
+export function teamAbbreviation(team: string): string {
+  return TEAM_TO_ABBREVIATION[team] ?? team.slice(0, 3).toUpperCase();
+}
+
 function normalizeTeam(abbreviation: string, displayName: string): string {
   return ABBREVIATION_TO_TEAM[abbreviation.toUpperCase()] ?? displayName;
 }
