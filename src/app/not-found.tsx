@@ -3,18 +3,20 @@ import { BrandMark } from "@/components/BrandMark";
 
 export default function NotFound() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
-      <BrandMark size={40} />
-      <h1 className="font-display text-3xl uppercase tracking-wide text-ink">Incomplete pass</h1>
-      <p className="text-sm text-ink-soft max-w-sm">
-        That page doesn&apos;t exist — fourth down and out of bounds.
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-start justify-center gap-5 px-4 py-24 sm:px-6">
+      <BrandMark size={32} />
+      <h1 className="font-display text-[clamp(3.5rem,10vw,7rem)] leading-[0.85] font-bold tracking-tight text-ink">
+        Page not found
+      </h1>
+      <p className="max-w-[46ch] leading-relaxed text-muted">
+        That page doesn&apos;t exist, or it has moved.
       </p>
       <Link
         href="/"
-        className="mt-2 bg-gold text-ink font-semibold rounded-md px-4 py-2 text-sm hover:bg-gold-soft transition-colors"
+        className="rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 active:translate-y-px"
       >
         Back to the pool
       </Link>
-    </div>
+    </main>
   );
 }

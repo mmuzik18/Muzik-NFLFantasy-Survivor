@@ -6,37 +6,46 @@ import { Authenticator, ThemeProvider } from "@aws-amplify/ui-react";
 import type { Theme } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import outputs from "../../amplify_outputs.json";
+import { BrandMark } from "@/components/BrandMark";
 import { loadPendingDisplayName, savePendingDisplayName } from "@/lib/pendingDisplayName";
 
 Amplify.configure(outputs);
 
+// Every color here is a CSS variable from globals.css, so the sign-in
+// screen follows the same light/dark tokens as the rest of the app. The
+// ThemeProvider below is pinned to colorMode="light" so Amplify never
+// applies its own dark overrides on top of ours.
 const theme: Theme = {
   name: "survivor-theme",
   tokens: {
     colors: {
-      primary: {
-        10: { value: "#eef5f0" },
-        20: { value: "#d7e6dc" },
-        40: { value: "#9fc2ab" },
-        60: { value: "#5c8f6c" },
-        80: { value: "#1f4a2e" },
-        90: { value: "#123825" },
-        100: { value: "#0b2e1d" },
+      font: {
+        primary: { value: "var(--color-ink)" },
+        secondary: { value: "var(--color-muted)" },
+        tertiary: { value: "var(--color-muted)" },
+        interactive: { value: "var(--color-ink)" },
+        hover: { value: "var(--color-muted)" },
+        focus: { value: "var(--color-ink)" },
+        active: { value: "var(--color-ink)" },
+        error: { value: "var(--color-loss)" },
       },
-      secondary: {
-        10: { value: "#faf3e3" },
-        20: { value: "#f1dfb0" },
-        40: { value: "#e3c179" },
-        60: { value: "#d4a24e" },
-        80: { value: "#c8912f" },
-        90: { value: "#a97525" },
-        100: { value: "#7d5619" },
+      background: {
+        primary: { value: "var(--color-surface)" },
+        secondary: { value: "var(--color-sunk)" },
+        tertiary: { value: "var(--color-sunk)" },
+      },
+      border: {
+        primary: { value: "var(--color-line)" },
+        secondary: { value: "var(--color-line)" },
+        tertiary: { value: "var(--color-line)" },
+        focus: { value: "var(--color-ink)" },
+        error: { value: "var(--color-loss)" },
       },
     },
     radii: {
       small: { value: "6px" },
-      medium: { value: "8px" },
-      large: { value: "12px" },
+      medium: { value: "6px" },
+      large: { value: "6px" },
     },
     fonts: {
       default: {
@@ -49,9 +58,9 @@ const theme: Theme = {
         router: {
           borderWidth: { value: "1px" },
           borderStyle: { value: "solid" },
-          borderColor: { value: "#e4dcc5" },
-          backgroundColor: { value: "#fffdf8" },
-          boxShadow: { value: "0 30px 60px -25px rgba(0,0,0,0.55)" },
+          borderColor: { value: "var(--color-line)" },
+          backgroundColor: { value: "var(--color-surface)" },
+          boxShadow: { value: "none" },
         },
         form: {
           padding: { value: "2rem 2rem 1.5rem" },
@@ -62,79 +71,74 @@ const theme: Theme = {
       },
       tabs: {
         item: {
-          color: { value: "#8a8377" },
+          color: { value: "var(--color-muted)" },
           fontWeight: { value: "600" },
           _active: {
-            color: { value: "#0b2e1d" },
-            borderColor: { value: "#c8912f" },
+            color: { value: "var(--color-ink)" },
+            borderColor: { value: "var(--color-ink)" },
           },
-          _hover: { color: { value: "#0b2e1d" } },
-          _focus: { color: { value: "#0b2e1d" } },
+          _hover: { color: { value: "var(--color-ink)" } },
+          _focus: { color: { value: "var(--color-ink)" } },
         },
       },
       fieldcontrol: {
-        borderRadius: { value: "8px" },
-        borderColor: { value: "#ddd4bc" },
+        borderRadius: { value: "6px" },
+        borderColor: { value: "var(--color-line)" },
+        color: { value: "var(--color-ink)" },
         _focus: {
-          borderColor: { value: "#c8912f" },
-          boxShadow: { value: "0 0 0 3px rgba(200, 145, 47, 0.25)" },
+          borderColor: { value: "var(--color-ink)" },
+          boxShadow: { value: "0 0 0 1px var(--color-ink)" },
         },
       },
       button: {
-        fontWeight: { value: "700" },
-        borderRadius: { value: "8px" },
+        fontWeight: { value: "600" },
+        borderRadius: { value: "6px" },
         primary: {
-          backgroundColor: { value: "#c8912f" },
-          color: { value: "#17140f" },
-          _hover: { backgroundColor: { value: "#d4a24e" } },
-          _active: { backgroundColor: { value: "#a97525" } },
+          backgroundColor: { value: "var(--color-accent)" },
+          color: { value: "var(--color-on-accent)" },
+          _hover: {
+            backgroundColor: {
+              value: "color-mix(in srgb, var(--color-accent) 88%, var(--color-ink))",
+            },
+            color: { value: "var(--color-on-accent)" },
+          },
+          _active: {
+            backgroundColor: {
+              value: "color-mix(in srgb, var(--color-accent) 80%, var(--color-ink))",
+            },
+            color: { value: "var(--color-on-accent)" },
+          },
           _focus: {
-            backgroundColor: { value: "#d4a24e" },
-            boxShadow: { value: "0 0 0 3px rgba(200, 145, 47, 0.35)" },
+            backgroundColor: { value: "var(--color-accent)" },
+            color: { value: "var(--color-on-accent)" },
+            boxShadow: { value: "0 0 0 2px var(--color-ink)" },
           },
         },
         link: {
-          color: { value: "#0b2e1d" },
-          _hover: { color: { value: "#c8912f" } },
+          color: { value: "var(--color-ink)" },
+          _hover: { color: { value: "var(--color-muted)" } },
         },
       },
     },
   },
 };
 
-function BrandMark() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="7" fill="#c8912f" />
-      <ellipse cx="16" cy="16" rx="9.5" ry="6.2" fill="#0b2e1d" />
-      <path d="M8 16 L24 16" stroke="#c8912f" strokeWidth="0.9" />
-      <path
-        d="M13 13.4 L13 18.6 M15 12.6 L15 19.4 M17 12.6 L17 19.4 M19 13.4 L19 18.6"
-        stroke="#c8912f"
-        strokeWidth="0.9"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 // Sits above the actual (Cognito-managed) email field on the Create
 // Account tab. Deliberately NOT a real Cognito attribute (e.g. via
-// signUpAttributes={['nickname']}) — that requires the user pool client
+// signUpAttributes={['nickname']}): that requires the user pool client
 // to have write permission for that attribute, which, like the pool's
 // schema itself, is a create-time-only setting on an already-deployed
 // pool (confirmed against a real failed deploy). Captured into
-// localStorage instead and consumed once the account is created — see
+// localStorage instead and consumed once the account is created, see
 // pendingDisplayName.ts and PlayerContext.tsx.
 function SignUpNameField() {
   const [value, setValue] = useState(() => loadPendingDisplayName());
 
   return (
-    <div className="px-6 pt-6 pb-1">
+    <div className="px-8 pt-8 pb-1">
       <label
         htmlFor="pending-display-name"
-        className="text-sm font-medium block mb-1"
-        style={{ color: "#17140f" }}
+        className="mb-1.5 block text-sm font-medium text-ink"
       >
         Display name
       </label>
@@ -150,10 +154,10 @@ function SignUpNameField() {
         }}
         placeholder="What should we call you?"
         maxLength={40}
-        className="w-full rounded-md border border-[#ddd4bc] bg-white px-2.5 py-2 text-sm text-ink placeholder:text-ink-soft/70 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25"
+        className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink"
       />
-      <p className="text-xs text-ink-soft mt-1">
-        Optional — shown instead of your email everywhere in the app. You can change it later too.
+      <p className="mt-1.5 text-sm text-muted">
+        Optional. Shown instead of your email everywhere in the app. You can change it later too.
       </p>
     </div>
   );
@@ -162,13 +166,13 @@ function SignUpNameField() {
 const components = {
   Header() {
     return (
-      <div className="flex flex-col items-center gap-3 pt-10 pb-6 px-6 text-center">
-        <BrandMark />
+      <div className="flex flex-col items-start gap-5 pt-4 pb-8">
+        <BrandMark size={34} />
         <div>
-          <h1 className="font-display text-2xl tracking-wide text-[#f7f3e8] uppercase">
+          <h1 className="font-display text-5xl leading-[0.9] font-bold tracking-tight text-ink">
             Muzik NFL Survivor
           </h1>
-          <p className="mt-1 text-sm text-[#c9c3b2]">
+          <p className="mt-3 text-[15px] text-muted">
             Pick one team a week. Don&apos;t repeat. Don&apos;t lose.
           </p>
         </div>
@@ -177,7 +181,7 @@ const components = {
   },
   Footer() {
     return (
-      <div className="pb-10 pt-4 text-center text-xs text-[#a7a08e]">
+      <div className="pt-6 pb-10 text-sm text-muted">
         Sign in to see the rules, make your pick, and check standings.
       </div>
     );
@@ -189,7 +193,7 @@ const components = {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={theme} colorMode="light">
       <Authenticator components={components}>{children}</Authenticator>
     </ThemeProvider>
   );

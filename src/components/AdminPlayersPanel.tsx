@@ -15,15 +15,15 @@ function PlayerRow({
   const [week, setWeek] = useState(player.eliminatedWeek ?? 1);
 
   return (
-    <li className="py-2.5 px-2 -mx-2 rounded-md flex items-center justify-between gap-3 transition-colors hover:bg-background">
-      <span className="text-sm text-ink">{player.displayName}</span>
-      <div className="flex items-center gap-2">
+    <li className="flex items-center justify-between gap-3 rounded-md px-2 py-2 transition-colors hover:bg-sunk">
+      <span className="min-w-0 truncate text-sm text-ink">{player.displayName}</span>
+      <div className="flex shrink-0 items-center gap-2">
         {player.isEliminated ? (
           <>
-            <span className="text-xs text-loss">Out — Week {player.eliminatedWeek}</span>
+            <span className="text-sm text-loss">Out, week {player.eliminatedWeek}</span>
             <button
               onClick={() => onUpdate(player, false, null)}
-              className="text-xs border border-win text-win rounded-md px-2 py-1 hover:bg-win-bg transition-colors cursor-pointer"
+              className="cursor-pointer rounded-md border border-win/40 px-2.5 py-1 text-xs font-medium text-win transition-colors hover:bg-win-soft"
             >
               Reinstate
             </button>
@@ -36,11 +36,12 @@ function PlayerRow({
               max={18}
               value={week}
               onChange={(e) => setWeek(Number(e.target.value))}
-              className="w-14 rounded-md border border-line bg-background px-1.5 py-0.5 text-xs text-ink"
+              aria-label={`Elimination week for ${player.displayName}`}
+              className="w-16 rounded-md border border-line bg-surface px-2 py-1 text-sm tabular-nums text-ink"
             />
             <button
               onClick={() => onUpdate(player, true, week)}
-              className="text-xs border border-loss text-loss rounded-md px-2 py-1 hover:bg-loss-bg transition-colors cursor-pointer"
+              className="cursor-pointer rounded-md border border-loss/40 px-2.5 py-1 text-xs font-medium text-loss transition-colors hover:bg-loss-soft"
             >
               Eliminate
             </button>
@@ -59,15 +60,17 @@ export function AdminPlayersPanel({
   onUpdate: (player: Player, isEliminated: boolean, eliminatedWeek: number | null) => void;
 }) {
   return (
-    <section className="rounded-xl border border-line bg-card shadow-[var(--shadow-card)] p-5">
-      <h2 className="font-display uppercase tracking-wide text-ink text-lg mb-1">Players</h2>
-      <p className="text-xs text-ink-soft mb-3">
-        Manual override — normal elimination happens automatically when a pick is graded.
+    <section aria-labelledby="admin-players-heading">
+      <h2 id="admin-players-heading" className="text-[15px] font-semibold text-ink">
+        Players
+      </h2>
+      <p className="mt-1 mb-4 max-w-[64ch] text-sm leading-relaxed text-muted">
+        Manual override. Normal elimination happens automatically when a pick is graded.
       </p>
       {players.length === 0 ? (
-        <p className="text-sm text-ink-soft">No players yet.</p>
+        <p className="text-sm text-muted">No players yet.</p>
       ) : (
-        <ul className="divide-y divide-line">
+        <ul className="flex flex-col gap-0.5">
           {players.map((p) => (
             <PlayerRow key={p.id} player={p} onUpdate={onUpdate} />
           ))}

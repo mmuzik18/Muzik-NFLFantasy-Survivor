@@ -24,7 +24,7 @@ export function EditableName({
       await onSave(trimmed);
       toast.success(`Display name updated to "${trimmed}".`);
     } catch (e) {
-      toast.error("Couldn't update your display name — try again.");
+      toast.error("Couldn't update your display name. Try again.");
       console.error(e);
     } finally {
       setSaving(false);
@@ -40,7 +40,7 @@ export function EditableName({
           setEditing(true);
         }}
         disabled={saving}
-        className="text-[#f7f3e8] font-medium hover:underline decoration-dotted underline-offset-4 cursor-pointer disabled:opacity-60"
+        className="cursor-pointer text-sm font-medium text-ink underline-offset-4 decoration-muted/60 hover:underline disabled:opacity-60"
         title="Click to change your display name"
       >
         {saving ? "Saving..." : name}
@@ -64,7 +64,8 @@ export function EditableName({
           if (e.key === "Escape") setEditing(false);
         }}
         maxLength={40}
-        className="text-sm bg-[#0b2e1d] border border-gold rounded px-1.5 py-0.5 text-[#f7f3e8] w-32 focus:outline-none"
+        aria-label="Display name"
+        className="w-36 rounded-md border border-ink bg-surface px-2 py-1 text-sm text-ink"
       />
     </form>
   );

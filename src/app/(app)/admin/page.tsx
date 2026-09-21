@@ -7,7 +7,7 @@ import { usePlayer } from "@/lib/PlayerContext";
 import type { Schema } from "../../../../amplify/data/resource";
 import { AdminPicksPanel } from "@/components/AdminPicksPanel";
 import { AdminPlayersPanel } from "@/components/AdminPlayersPanel";
-import { Spinner, SkeletonRows } from "@/components/Spinner";
+import { SkeletonRows } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
@@ -95,49 +95,56 @@ export default function AdminPage() {
 
   if (playerLoading) {
     return (
-      <div className="flex-1 max-w-4xl w-full mx-auto p-6">
-        <Spinner />
-        <SkeletonRows />
-      </div>
+      <main id="main-content" className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:px-6">
+        <div className="max-w-3xl">
+          <SkeletonRows />
+        </div>
+      </main>
     );
   }
 
   if (!admin) {
     return (
-      <div className="flex-1 max-w-4xl w-full mx-auto p-6 flex flex-col items-center justify-center gap-3 text-center">
-        <h1 className="font-display text-2xl uppercase text-ink">Admins only</h1>
-        <p className="text-sm text-ink-soft max-w-sm">
+      <main id="main-content" className="mx-auto w-full max-w-6xl flex-1 px-4 pt-16 pb-24 sm:px-6">
+        <h1 className="font-display text-5xl leading-[0.9] font-bold tracking-tight text-ink">
+          Admins only
+        </h1>
+        <p className="mt-5 max-w-[52ch] leading-relaxed text-muted">
           You don&apos;t have access to this page. If you were just added to the admins group, sign
-          all the way out and back in first — group membership only takes effect on a fresh sign-in.
+          all the way out and back in first. Group membership only takes effect on a fresh sign-in.
         </p>
-        <Link href="/" className="text-sm text-gold hover:underline">
+        <Link
+          href="/"
+          className="mt-6 inline-block text-sm font-medium text-ink underline underline-offset-4 hover:text-muted"
+        >
           Back to the pool
         </Link>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div id="main-content" className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
-      <h1 className="font-display text-2xl uppercase tracking-wide text-ink">Admin</h1>
+    <main id="main-content" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 sm:px-6">
+      <div className="max-w-3xl">
+        <h1 className="pt-12 pb-10 font-display text-[clamp(3rem,8vw,5rem)] leading-[0.9] font-bold tracking-tight text-ink">
+          Admin
+        </h1>
 
-      {error && (
-        <p className="text-sm text-loss bg-loss-bg border border-loss/30 rounded-md px-3 py-2">
-          {error}
-        </p>
-      )}
+        {error && (
+          <p role="alert" className="mb-8 rounded-md border border-loss/30 bg-loss-soft px-3 py-2 text-sm text-loss">
+            {error}
+          </p>
+        )}
 
-      {loading ? (
-        <>
-          <Spinner />
-          <SkeletonRows />
-        </>
-      ) : (
-        <>
-          <AdminPicksPanel picks={picks} players={players} onGrade={gradePick} onDelete={requestDeletePick} />
-          <AdminPlayersPanel players={players} onUpdate={requestUpdatePlayer} />
-        </>
-      )}
+        {loading ? (
+          <SkeletonRows rows={5} />
+        ) : (
+          <div className="flex flex-col gap-14">
+            <AdminPicksPanel picks={picks} players={players} onGrade={gradePick} onDelete={requestDeletePick} />
+            <AdminPlayersPanel players={players} onUpdate={requestUpdatePlayer} />
+          </div>
+        )}
+      </div>
 
       <ConfirmDialog
         open={pendingConfirm !== null}
@@ -156,6 +163,6 @@ export default function AdminPage() {
         onConfirm={handleConfirm}
         onCancel={() => setPendingConfirm(null)}
       />
-    </div>
+    </main>
   );
 }

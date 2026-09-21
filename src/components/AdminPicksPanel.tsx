@@ -21,26 +21,33 @@ export function AdminPicksPanel({
   );
 
   return (
-    <section className="rounded-xl border border-line bg-card shadow-[var(--shadow-card)] p-5">
-      <h2 className="font-display uppercase tracking-wide text-ink text-lg mb-1">All picks</h2>
-      <p className="text-xs text-ink-soft mb-3">
-        Pending picks are graded automatically once their game goes final — the scheduled sync
-        handles it, no need to grade by hand. The Win/Loss buttons below are a manual override for
-        edge cases (e.g. a game ESPN never marks final). You can also delete a pick entirely — e.g.
-        to reset a player who wants a clean slate — which frees up that team and that week for them
-        again.
+    <section aria-labelledby="admin-picks-heading">
+      <h2 id="admin-picks-heading" className="text-[15px] font-semibold text-ink">
+        All picks
+      </h2>
+      <p className="mt-1 mb-4 max-w-[64ch] text-sm leading-relaxed text-muted">
+        Pending picks are graded automatically once their game goes final, so there&apos;s no need
+        to grade by hand. The Win and Loss buttons are a manual override for edge cases, such as a
+        game ESPN never marks final. Deleting a pick clears it entirely, which frees up that team
+        and that week for the player again.
       </p>
       {sorted.length === 0 ? (
-        <p className="text-sm text-ink-soft">No picks yet.</p>
+        <p className="text-sm text-muted">No picks yet.</p>
       ) : (
-        <ul className="divide-y divide-line">
+        <ul className="flex flex-col gap-0.5">
           {sorted.map((p) => (
             <li
               key={p.id}
-              className="py-2.5 px-2 -mx-2 rounded-md flex items-center justify-between gap-2 flex-wrap transition-colors hover:bg-background"
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-md px-2 py-2 transition-colors hover:bg-sunk"
             >
-              <span className="text-sm text-ink">
-                Week {p.week} — <span className="text-ink-soft">{nameFor(p.playerId)}</span> — {p.team}
+              <span className="flex min-w-0 items-baseline gap-3 text-sm">
+                <span className="w-7 shrink-0 font-display text-xl leading-none font-semibold tabular-nums text-muted">
+                  {p.week}
+                </span>
+                <span className="min-w-0">
+                  <span className="font-medium text-ink">{nameFor(p.playerId)}</span>
+                  <span className="text-muted">, {p.team}</span>
+                </span>
               </span>
               <span className="flex items-center gap-2">
                 <ResultBadge result={p.result} />
@@ -48,13 +55,13 @@ export function AdminPicksPanel({
                   <>
                     <button
                       onClick={() => onGrade(p, "WIN")}
-                      className="text-xs text-win border border-win rounded-md px-2 py-0.5 hover:bg-win-bg transition-colors cursor-pointer"
+                      className="cursor-pointer rounded-md border border-win/40 px-2.5 py-1 text-xs font-medium text-win transition-colors hover:bg-win-soft"
                     >
                       Win
                     </button>
                     <button
                       onClick={() => onGrade(p, "LOSS")}
-                      className="text-xs text-loss border border-loss rounded-md px-2 py-0.5 hover:bg-loss-bg transition-colors cursor-pointer"
+                      className="cursor-pointer rounded-md border border-loss/40 px-2.5 py-1 text-xs font-medium text-loss transition-colors hover:bg-loss-soft"
                     >
                       Loss
                     </button>
@@ -62,7 +69,7 @@ export function AdminPicksPanel({
                 )}
                 <button
                   onClick={() => onDelete(p)}
-                  className="text-xs text-ink-soft border border-line rounded-md px-2 py-0.5 hover:border-loss hover:text-loss transition-colors cursor-pointer"
+                  className="cursor-pointer rounded-md border border-line px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:border-loss/40 hover:text-loss"
                 >
                   Delete
                 </button>

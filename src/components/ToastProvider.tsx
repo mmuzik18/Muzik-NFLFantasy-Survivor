@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { X } from "@phosphor-icons/react";
 
 type ToastKind = "success" | "error";
 type Toast = { id: number; kind: ToastKind; message: string };
@@ -40,17 +41,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
       <div
-        className="no-print fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-[calc(100%-2rem)] max-w-sm sm:left-auto sm:right-4 sm:translate-x-0"
+        className="no-print fixed top-16 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 sm:right-4 sm:left-auto sm:translate-x-0"
         aria-live="polite"
       >
         {toasts.map((t) => (
           <div
             key={t.id}
             role="status"
-            className={`animate-toast-in rounded-lg border px-3.5 py-2.5 text-sm shadow-[var(--shadow-card)] flex items-start justify-between gap-3 ${
+            className={`animate-toast-in flex items-start justify-between gap-3 rounded-md border px-3.5 py-2.5 text-sm shadow-float ${
               t.kind === "success"
-                ? "bg-win-bg border-win/30 text-win"
-                : "bg-loss-bg border-loss/30 text-loss"
+                ? "border-win/30 bg-win-soft text-win"
+                : "border-loss/30 bg-loss-soft text-loss"
             }`}
           >
             <span>{t.message}</span>
@@ -58,9 +59,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={() => dismiss(t.id)}
               aria-label="Dismiss"
-              className="shrink-0 opacity-60 hover:opacity-100 cursor-pointer"
+              className="mt-0.5 shrink-0 cursor-pointer opacity-60 hover:opacity-100"
             >
-              &times;
+              <X size={14} />
             </button>
           </div>
         ))}
